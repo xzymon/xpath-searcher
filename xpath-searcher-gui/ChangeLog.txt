@@ -1,0 +1,7 @@
+[v 0.0.2] [27-04-2015]
++ Basic GUI template
++ JTextPane without line wrapping
++ File load from file system to JTextPane
++ Metal L&F in use
++ SLF4J + Logback in use
++ Properties file: "/xpath-searcher.properties"
