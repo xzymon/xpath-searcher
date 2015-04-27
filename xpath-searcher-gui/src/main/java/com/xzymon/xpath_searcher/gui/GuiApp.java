@@ -1,6 +1,7 @@
 package com.xzymon.xpath_searcher.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -30,7 +31,11 @@ import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultStyledDocument;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,6 +110,7 @@ public class GuiApp extends JFrame{
 		menuBar = new JMenuBar();
 		mFile = new JMenu("File");
 		mFile.add(new OpenFileAction());
+		mFile.add(new StainTextAction());
 		mFile.addSeparator();
 		mFile.add(new CloseAction());
 		menuBar.add(mFile);
@@ -245,6 +251,31 @@ public class GuiApp extends JFrame{
 					logger.error(String.format("File %1$s does not exist!", file.getAbsolutePath()));
 				}
 			}
+		}
+		
+	}
+	
+	class StainTextAction extends AbstractAction {
+
+		public StainTextAction() {
+			putValue(Action.NAME, "Stain Text");
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			StyledDocument sdoc = analysePane.getStyledDocument();
+			
+			SimpleAttributeSet sas = new SimpleAttributeSet();
+			StyleConstants.setForeground(sas, Color.decode("0xFF0000"));
+			StyleConstants.setBold(sas, true);
+			
+			int length = analysePane.getDocument().getLength();
+			try {
+				sdoc.insertString(length, "Mayahee", sas);
+			} catch (BadLocationException ex) {
+				ex.printStackTrace();
+			}
+			//sdoc.setCharacterAttributes(0, 10, sas, false);
 		}
 		
 	}
