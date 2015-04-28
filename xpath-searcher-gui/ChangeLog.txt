@@ -5,3 +5,8 @@
 + Metal L&F in use
 + SLF4J + Logback in use
 + Properties file: "/xpath-searcher.properties"
+
+[v 0.0.3.alpha] [27-04-2015]
+
+[v 0.0.3.alpha2] [28-04-2015]
+\ developing engine to parse XML and color text

@@ -8,6 +8,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -36,9 +37,15 @@ import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 
 public class GuiApp extends JFrame{
 	private static final long serialVersionUID = 3219548713775085362L;
@@ -218,6 +225,7 @@ public class GuiApp extends JFrame{
 				if(file.exists()){
 					if(file.canRead()){
 						InputStream is = null;
+						ByteArrayInputStream bs = null;
 						int avail = 0;
 						byte[] bytes = null;
 						String str = null;
@@ -228,6 +236,11 @@ public class GuiApp extends JFrame{
 								bytes = new byte[avail];
 								is.read(bytes);
 								str = new String(bytes);
+								//
+								bs = new ByteArrayInputStream(bytes);
+								StreamCutter cutter = new StreamCutter(bs, false);
+								cutter.logReport();
+								//
 								analysePane.setText(str);
 							}
 						} catch (FileNotFoundException ex) {
@@ -239,6 +252,14 @@ public class GuiApp extends JFrame{
 							if(is!=null){
 								try{
 									is.close();
+								} catch(IOException ex){
+									ex.printStackTrace();
+								}
+							}
+							
+							if(bs!=null){
+								try{
+									bs.close();
 								} catch(IOException ex){
 									ex.printStackTrace();
 								}

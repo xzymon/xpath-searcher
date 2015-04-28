@@ -3,12 +3,34 @@
 
  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 	<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-		<Pattern>%d{yyyy-MM-dd_HH:mm:ss.SSS} %-5level %logger{36} - %msg%n
-                </Pattern>
+		<Pattern>%d{yyyy-MM-dd_HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</Pattern>
 	</encoder>
  </appender>
+ 
+ <appender name="FILE"
+	class="ch.qos.logback.core.rolling.RollingFileAppender">
+	<file>/home/szymon/Pobrane/logi/LogbackLogs</file>
+	<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+	   <Pattern>%d{yyyy-MM-dd_HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+           </Pattern>
+	</encoder>
+
+	<rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+		<FileNamePattern>/home/szymon/Pobrane/logi/LogbackLogs.%i.zip</FileNamePattern>
+		<MinIndex>1</MinIndex>
+		<MaxIndex>30</MaxIndex>
+	</rollingPolicy>
+
+	<triggeringPolicy
+		class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+		<MaxFileSize>10MB</MaxFileSize>
+	</triggeringPolicy>
+
+  </appender>
+ 
 
   <root level="INFO">
+  	<appender-ref ref="FILE" />
 	<appender-ref ref="STDOUT" />
   </root>
 
