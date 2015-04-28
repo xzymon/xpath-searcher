@@ -15,6 +15,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Properties;
 
 import javax.swing.AbstractAction;
@@ -238,8 +239,14 @@ public class GuiApp extends JFrame{
 								str = new String(bytes);
 								//
 								bs = new ByteArrayInputStream(bytes);
-								StreamCutter cutter = new StreamCutter(bs, false);
-								cutter.logReport();
+								//StreamCutter cutter = new StreamCutter(bs, false);
+								//cutter.logReport();
+								Slicer slicer = new Slicer();
+								List<Slice> slices = slicer.slice(bs);
+								for(Slice slice: slices){
+									logger.info(slice.toString());
+								}
+								logger.info("The number of slices is : " + slices.size());
 								//
 								analysePane.setText(str);
 							}

@@ -10,3 +10,6 @@
 
 [v 0.0.3.alpha2] [28-04-2015]
 \ developing engine to parse XML and color text
+
+[v 0.0.3.alpha3] [28-04-2015]
+\ developing engine to parse XML and color text - slicer works

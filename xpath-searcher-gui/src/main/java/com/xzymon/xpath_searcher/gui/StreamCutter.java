@@ -52,6 +52,9 @@ public class StreamCutter {
 							logger.error(String.format("[pos: %3$d]%1$s: %2$s", ex.getClass().getName(), ex.getMessage(), pos));
 						}
 						break;
+					case '?':
+						list.add(new QuestionMarkControlPoint(pos));
+						break;
 					case '!':
 						list.add(new ExclamationMarkControlPoint(pos));
 						break;
@@ -96,6 +99,12 @@ public class StreamCutter {
 						} catch (InvalidCharacterException ex){
 							logger.error(String.format("%1$s: %2$s at %3$d", ex.getClass().getName(), ex.getMessage(), pos));
 						}
+						break;
+					case '?':
+						list.add(new QuestionMarkControlPoint(pos));
+						break;
+					case '!':
+						list.add(new ExclamationMarkControlPoint(pos));
 						break;
 					}
 					pos++;
