@@ -241,7 +241,7 @@ public class GuiApp extends JFrame{
 								bs = new ByteArrayInputStream(bytes);
 								//StreamCutter cutter = new StreamCutter(bs, false);
 								//cutter.logReport();
-								Slicer slicer = new Slicer();
+								Slicer slicer = new Slicer(bs);
 								List<Slice> slices = slicer.slice(bs);
 								for(Slice slice: slices){
 									logger.info(slice.toString());
@@ -255,6 +255,9 @@ public class GuiApp extends JFrame{
 						} catch (IOException ex) {
 							//logger.error(String.format("IOException during: new FileInputStream(\"%1$s\")", file.getAbsolutePath()));
 							ex.printStackTrace();
+						} catch (SlicingException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
 						} finally {
 							if(is!=null){
 								try{

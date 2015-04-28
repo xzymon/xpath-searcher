@@ -1,0 +1,3 @@
+Trzeba opracować koncepcję co właściwie robić z tymi Slice'ami
+ - w jaką strukturę je złączyć
+ - jak/jakie generować zdarzenia dla handlera

@@ -13,3 +13,6 @@
 
 [v 0.0.3.alpha3] [28-04-2015]
 \ developing engine to parse XML and color text - slicer works
+
+[v 0.0.3.alpha4] [28-04-2015]
+\ developing engine to parse XML and color text - refactoring - Slicer & StreamCutter joined up
