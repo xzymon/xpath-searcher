@@ -2,6 +2,7 @@ package com.xzymon.xpath_searcher.gui;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -25,6 +26,8 @@ public class Slicer {
 	private ControlPoint errorPoint = null;
 	private ControlPoint regainPoint = null;
 	
+	private ProcessingHandler handler = null;
+	
 	public Slicer(InputStream is){
 		try{
 			int avail = is.available();
@@ -39,6 +42,10 @@ public class Slicer {
 		}
 	}
 	
+	public void useHandler(){
+		logEventsReport();
+	}
+	
 	public List<Slice> slice(InputStream is) throws SlicingException{
 		slist = new LinkedList<Slice>();
 		modeList = new LinkedList<SlicerMode>();
@@ -50,6 +57,7 @@ public class Slicer {
 		SliceAttribute currentAttribute = null;
 		boolean reinvoke = false;
 		
+		controlPointsHistory.addLast(new NoneControlPoint(-1));
 		addMode(SlicerMode.NONE);
 				
 		findControlPoints();
@@ -154,6 +162,8 @@ public class Slicer {
 				case ERROR:
 					// nic
 					break;
+				default:
+					break;
 				}
 				break;
 			case '\'':
@@ -178,6 +188,8 @@ public class Slicer {
 					break;
 				case ERROR:
 					// nic
+					break;
+				default:
 					break;
 				}
 				break;
@@ -361,6 +373,10 @@ public class Slicer {
 		return result;
 	}
 	
+	public void setProcessingHandler(ProcessingHandler handler){
+		this.handler = handler;
+	}
+	
 	public ControlPoint registerRegain(int pos, char ch){
 		ControlPoint cp = null;
 		return cp;
@@ -385,6 +401,26 @@ public class Slicer {
 	public void logReport(){
 		for (ControlPoint controlPoint : controlPoints) {
 			logger.info(String.format("%1$d = %2$s", controlPoint.getPosition(), controlPoint.getChar()));
+		}
+	}
+	
+	public void logEventsReport(){
+		int pos = -1;
+		int modeLength = modeHistory.size();
+		int cpLength = controlPointsHistory.size();
+		if(modeLength==cpLength){
+			Iterator<SlicerMode> modeIt = modeHistory.iterator();
+			Iterator<ControlPoint> cpIt = controlPointsHistory.iterator();
+			SlicerMode mode = null;
+			ControlPoint controlPoint = null;
+			while(modeIt.hasNext() && cpIt.hasNext()){
+				pos++;
+				mode = modeIt.next();
+				controlPoint = cpIt.next();
+				logger.info(String.format("pos %1$d: mode: %2$s, controlPoint: pos=%3$d", pos, mode.toString(), controlPoint.getPosition()));
+			}
+		} else {
+			logger.info(String.format("lengths don't match : mode=%1$d, cp=%2$d", modeLength, cpLength));
 		}
 	}
 }

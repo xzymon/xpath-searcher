@@ -22,3 +22,6 @@
 
 [v 0.0.3.alpha6.1] [29-04-2015]
 \ developing engine to parse XML and color text - backup before greater changes in logic
+
+[v 0.0.3.alpha6.2] [29-04-2015]
+\ developing engine to parse XML and color text - useHandler developing

@@ -243,9 +243,12 @@ public class GuiApp extends JFrame{
 								//cutter.logReport();
 								Slicer slicer = new Slicer(bs);
 								List<Slice> slices = slicer.slice(bs);
+								slicer.useHandler();
+								/*
 								for(Slice slice: slices){
 									logger.info(slice.toString());
 								}
+								*/
 								logger.info("The number of slices is : " + slices.size());
 								//
 								analysePane.setText(str);
