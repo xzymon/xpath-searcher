@@ -39,6 +39,7 @@ public class Slicer {
 		modeList = new LinkedList<SlicerMode>();
 		Slice currentSlice = null;
 		SliceAttribute currentAttribute = null;
+		boolean reinvoke = false;
 			
 		modeList.addLast(SlicerMode.NONE);
 				
@@ -82,24 +83,34 @@ public class Slicer {
 				}
 				break;
 			case '>':
-				if(modeList.getLast().equals(SlicerMode.INSIDE_ATTRIBUTE)){
-					modeList.removeLast();
-					currentAttribute.setLength(cp.getPosition()-currentSlice.getFirstByteInStreamPosition()-currentAttribute.getFirstCharOffset());
-					currentSlice.addAttribute(currentAttribute);
-					currentAttribute = null;
-				}
-				if(modeList.getLast().equals(SlicerMode.INSIDE_SLICE)){
-					if(pre_cp.getChar()=='/' && pre_cp.getPosition()==cp.getPosition()-1){
-						currentSlice.setType(SliceType.WITHOUT_CONTENT);
+				//invoke/reinvoke jest na potrzeby obsłużenia za jednym razem zejścia z INSIDE_ATTRIBUTE i INSIDE_SLICE
+				//zmienione z if'ów na switch-case na potrzeby ewentualnej rozbudowy (przypuszczanie obsługa błędów)
+				do {
+					reinvoke = false;
+					switch(modeList.getLast()){
+					case INSIDE_ATTRIBUTE:
+						modeList.removeLast();
+						currentAttribute.setLength(cp.getPosition()-currentSlice.getFirstByteInStreamPosition()-currentAttribute.getFirstCharOffset());
+						currentSlice.addAttribute(currentAttribute);
+						currentAttribute = null;
+						reinvoke = true;
+						break;
+					case INSIDE_SLICE:
+						if(pre_cp.getChar()=='/' && pre_cp.getPosition()==cp.getPosition()-1){
+							currentSlice.setType(SliceType.WITHOUT_CONTENT);
+						}
+						if(pre_cp.getPosition()<cp.getPosition()-1 && (pre_cp.getChar()=='<' || pre_cp.getChar()=='/')){
+							currentSlice.setTagNameStartOffset(pre_cp.getPosition()+1);
+							currentSlice.setTagNameLength(cp.getPosition()-pre_cp.getPosition()-1);
+						}
+						currentSlice.setClosingByteOffset(cp.getPosition()-currentSlice.getFirstByteInStreamPosition());
+						currentSlice = null;
+						modeList.removeLast();
+						break;
+					default:
+						break;
 					}
-					if(pre_cp.getPosition()<cp.getPosition()-1 && (pre_cp.getChar()=='<' || pre_cp.getChar()=='/')){
-						currentSlice.setTagNameStartOffset(pre_cp.getPosition()+1);
-						currentSlice.setTagNameLength(cp.getPosition()-pre_cp.getPosition()-1);
-					}
-					currentSlice.setClosingByteOffset(cp.getPosition()-currentSlice.getFirstByteInStreamPosition());
-					currentSlice = null;
-					modeList.removeLast();
-				}
+				} while (reinvoke);
 				break;
 			case '\"':
 				switch(modeList.getLast()){
@@ -152,21 +163,27 @@ public class Slicer {
 				}
 				break;
 			case '/':
-				if(modeList.getLast().equals(SlicerMode.INSIDE_ATTRIBUTE)){
-					modeList.removeLast();
-					currentAttribute.setLength(cp.getPosition()-currentSlice.getFirstByteInStreamPosition()-currentAttribute.getFirstCharOffset());
-					currentSlice.addAttribute(currentAttribute);
-					currentAttribute = null;
-				}
-				// sprawdzenie czy to ma jakiekolwiek znaczenie - jedynie w INSIDE_SLICE
-				// sprawdzanie tylko wstecz - więc do sprawdzenia tylko jedna opcja
-				if(modeList.getLast().equals(SlicerMode.INSIDE_SLICE)){
-					if(pre_cp!=null){
+				do {
+					reinvoke = false;
+					switch(modeList.getLast()){
+					case INSIDE_ATTRIBUTE:
+						modeList.removeLast();
+						currentAttribute.setLength(cp.getPosition()-currentSlice.getFirstByteInStreamPosition()-currentAttribute.getFirstCharOffset());
+						currentSlice.addAttribute(currentAttribute);
+						currentAttribute = null;
+						reinvoke = true;
+						break;
+					// sprawdzenie czy to ma jakiekolwiek znaczenie - jedynie w INSIDE_SLICE
+					// sprawdzanie tylko wstecz - więc do sprawdzenia tylko jedna opcja
+					case INSIDE_SLICE:
 						if(pre_cp.getPosition()==cp.getPosition()-1 && pre_cp.getChar()=='<'){
 							currentSlice.setType(SliceType.WITH_CONTENT_CLOSING);
 						}
+						break;
+					default:
+						break;
 					}
-				}
+				} while (reinvoke);
 				break;
 			case '=':
 				// powinno mieć znaczenie tylko przy INSIDE_ATTRIBUTE
