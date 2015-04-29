@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,10 +16,14 @@ public class Slicer {
 	private LinkedList<Slice> slist = null;
 	private LinkedList<SlicerMode> modeList = null;
 	
+	private LinkedList<SlicerMode> modeHistory = null;
+	private LinkedList<ControlPoint> controlPointsHistory = null;
+	
 	private LinkedList<ControlPoint> controlPoints;
 	
 	private boolean slicingError = false;
 	private ControlPoint errorPoint = null;
+	private ControlPoint regainPoint = null;
 	
 	public Slicer(InputStream is){
 		try{
@@ -37,11 +42,15 @@ public class Slicer {
 	public List<Slice> slice(InputStream is) throws SlicingException{
 		slist = new LinkedList<Slice>();
 		modeList = new LinkedList<SlicerMode>();
+		// history
+		modeHistory = new LinkedList<SlicerMode>();
+		controlPointsHistory = new LinkedList<ControlPoint>();
+		
 		Slice currentSlice = null;
 		SliceAttribute currentAttribute = null;
 		boolean reinvoke = false;
-			
-		modeList.addLast(SlicerMode.NONE);
+		
+		addMode(SlicerMode.NONE);
 				
 		findControlPoints();
 		int cplength = controlPoints.size();
@@ -52,21 +61,24 @@ public class Slicer {
 			if(modeList.getLast()==SlicerMode.ERROR){
 				slicingError = true;
 				errorPoint = cp;
-				throw new SlicingException(errorPoint);
+				logger.info(String.format("error detected at %1$d on char=%2$d ['%3$s']", cp.getPosition(), (int)cp.getChar(), cp.getChar()));
 			}
 			pre_cp = cp;
 			cp = controlPoints.get(cploop);
+			
+			controlPointsHistory.addLast(cp);
+			
 			switch(cp.getChar()){
 			case '<':
 				switch(modeList.getLast()){
 				case NONE:
-					modeList.addLast(SlicerMode.INSIDE_SLICE);
+					addMode(SlicerMode.INSIDE_SLICE);
 					currentSlice = new Slice();
 					slist.add(currentSlice);
 					currentSlice.setFirstByteInStreamPosition(cp.getPosition());
 					break;
 				case INSIDE_SLICE:
-					modeList.addLast(SlicerMode.ERROR);
+					addMode(SlicerMode.ERROR);
 					break;
 				case INSIDE_DOUBLE_QUOTES:
 					// nic
@@ -80,6 +92,8 @@ public class Slicer {
 				case ERROR:
 					// nic
 					break;
+				default:
+					break;	
 				}
 				break;
 			case '>':
@@ -107,6 +121,11 @@ public class Slicer {
 						currentSlice = null;
 						modeList.removeLast();
 						break;
+					case ERROR:
+						modeList.removeLast();
+						registerRegain(cp);
+						pre_cp = getPreviousControlPointFrom(pre_cp);
+						reinvoke = true;
 					default:
 						break;
 					}
@@ -115,10 +134,10 @@ public class Slicer {
 			case '\"':
 				switch(modeList.getLast()){
 				case NONE:
-					modeList.addLast(SlicerMode.INSIDE_DOUBLE_QUOTES);
+					addMode(SlicerMode.INSIDE_DOUBLE_QUOTES);
 					break;
 				case INSIDE_SLICE:
-					modeList.addLast(SlicerMode.INSIDE_DOUBLE_QUOTES);
+					addMode(SlicerMode.INSIDE_DOUBLE_QUOTES);
 					break;
 				case INSIDE_DOUBLE_QUOTES:
 					// wycofaj tryb
@@ -129,7 +148,7 @@ public class Slicer {
 					break;
 				case INSIDE_ATTRIBUTE:
 					if(pre_cp!=null && pre_cp.getChar()=='=' && pre_cp.getPosition()==cp.getPosition()-1){
-						modeList.addLast(SlicerMode.INSIDE_DOUBLE_QUOTES);
+						addMode(SlicerMode.INSIDE_DOUBLE_QUOTES);
 					}
 					break;
 				case ERROR:
@@ -140,10 +159,10 @@ public class Slicer {
 			case '\'':
 				switch(modeList.getLast()){
 				case NONE:
-					modeList.addLast(SlicerMode.INSIDE_SINGLE_QUOTES);
+					addMode(SlicerMode.INSIDE_SINGLE_QUOTES);
 					break;
 				case INSIDE_SLICE:
-					modeList.addLast(SlicerMode.INSIDE_SINGLE_QUOTES);
+					addMode(SlicerMode.INSIDE_SINGLE_QUOTES);
 					break;
 				case INSIDE_DOUBLE_QUOTES:
 					// nic
@@ -154,7 +173,7 @@ public class Slicer {
 					break;
 				case INSIDE_ATTRIBUTE:
 					if(pre_cp!=null && pre_cp.getChar()=='=' && pre_cp.getPosition()==cp.getPosition()-1){
-						modeList.addLast(SlicerMode.INSIDE_DOUBLE_QUOTES);
+						addMode(SlicerMode.INSIDE_DOUBLE_QUOTES);
 					}
 					break;
 				case ERROR:
@@ -180,6 +199,11 @@ public class Slicer {
 							currentSlice.setType(SliceType.WITH_CONTENT_CLOSING);
 						}
 						break;
+					case ERROR:
+						modeList.removeLast();
+						registerRegain(cp);
+						pre_cp = getPreviousControlPointFrom(pre_cp);
+						reinvoke = true;
 					default:
 						break;
 					}
@@ -190,7 +214,7 @@ public class Slicer {
 				// jeśli poprzedni znak na liście jest whitespace i nie jest bezpośrednio poprzedni to  włącz tryb INSIDE_ATTRIBUTE
 				if(modeList.getLast().equals(SlicerMode.INSIDE_SLICE)){
 					if(pre_cp!=null && pre_cp instanceof WhitespaceControlPoint && pre_cp.getPosition()<cp.getPosition()-1){
-						modeList.addLast(SlicerMode.INSIDE_ATTRIBUTE);
+						addMode(SlicerMode.INSIDE_ATTRIBUTE);
 						currentAttribute = new SliceAttribute();
 						currentAttribute.setFirstCharOffset(pre_cp.getPosition()-currentSlice.getFirstByteInStreamPosition());
 						currentAttribute.setEqualsSignOffset(cp.getPosition()-pre_cp.getPosition());
@@ -202,34 +226,60 @@ public class Slicer {
 			case '\n':
 			case '\r':
 			case '\f':
-				if(modeList.getLast().equals(SlicerMode.INSIDE_SLICE)){
-					if(pre_cp.getPosition()<cp.getPosition()-1 && (pre_cp.getChar()=='<' || pre_cp.getChar()=='/')){
-						currentSlice.setTagNameStartOffset(pre_cp.getPosition()+1);
-						currentSlice.setTagNameLength(cp.getPosition()-pre_cp.getPosition()-1);
+				do {
+					reinvoke = false;
+					switch(modeList.getLast()){
+					// jeśli tryb INSIDE_ATTRIBUTE to powinno go wyłączać i konstruować/aktualizować ostatni SliceAttribute
+					case INSIDE_ATTRIBUTE:
+						modeList.removeLast();
+						currentAttribute.setLength(cp.getPosition()-currentSlice.getFirstByteInStreamPosition()-currentAttribute.getFirstCharOffset());
+						currentSlice.addAttribute(currentAttribute);
+						currentAttribute = null;
+						reinvoke = true;
+						break;
+					case INSIDE_SLICE:
+						if(pre_cp.getPosition()<cp.getPosition()-1 && (pre_cp.getChar()=='<' || pre_cp.getChar()=='/')){
+							currentSlice.setTagNameStartOffset(pre_cp.getPosition()+1);
+							currentSlice.setTagNameLength(cp.getPosition()-pre_cp.getPosition()-1);
+						}
+						break;
+					case ERROR:
+						modeList.removeLast();
+						registerRegain(cp);
+						pre_cp = getPreviousControlPointFrom(pre_cp);
+						reinvoke = true;
+					default:
+						break;
 					}
-				}
-				// jeśli tryb INSIDE_ATTRIBUTE to powinno go wyłączać i konstruować/aktualizować ostatni SliceAttribute
-				if(modeList.getLast().equals(SlicerMode.INSIDE_ATTRIBUTE)){
-					modeList.removeLast();
-					currentAttribute.setLength(cp.getPosition()-currentSlice.getFirstByteInStreamPosition()-currentAttribute.getFirstCharOffset());
-					currentSlice.addAttribute(currentAttribute);
-					currentAttribute = null;
-				}
+				} while (reinvoke);
 				break;
 			case '?':
-				// ma znaczenie dla deklaracji XML lub kodu php - gdy poprzedza go <
-				if(modeList.getLast().equals(SlicerMode.INSIDE_SLICE)){
-					if(pre_cp.getPosition()==cp.getPosition()-1 && pre_cp.getChar()=='<'){
-						currentSlice.setType(SliceType.OTHER);
+				do {
+					reinvoke = false;
+					switch(modeList.getLast()){
+					// jeśli tryb INSIDE_ATTRIBUTE to powinno go wyłączać i konstruować/aktualizować ostatni SliceAttribute
+					case INSIDE_ATTRIBUTE:
+						modeList.removeLast();
+						currentAttribute.setLength(cp.getPosition()-currentSlice.getFirstByteInStreamPosition()-currentAttribute.getFirstCharOffset());
+						currentSlice.addAttribute(currentAttribute);
+						currentAttribute = null;
+						reinvoke = true;
+						break;
+					// ma znaczenie dla deklaracji XML lub kodu php - gdy poprzedza go <
+					case INSIDE_SLICE:
+						if(pre_cp.getPosition()==cp.getPosition()-1 && pre_cp.getChar()=='<'){
+							currentSlice.setType(SliceType.OTHER);
+						}
+						break;
+					case ERROR:
+						modeList.removeLast();
+						registerRegain(cp);
+						pre_cp = getPreviousControlPointFrom(pre_cp);
+						reinvoke = true;
+					default:
+						break;
 					}
-				}
-				// jeśli tryb INSIDE_ATTRIBUTE to powinno go wyłączać i konstruować/aktualizować ostatni SliceAttribute
-				if(modeList.getLast().equals(SlicerMode.INSIDE_ATTRIBUTE)){
-					modeList.removeLast();
-					currentAttribute.setLength(cp.getPosition()-currentSlice.getFirstByteInStreamPosition()-currentAttribute.getFirstCharOffset());
-					currentSlice.addAttribute(currentAttribute);
-					currentAttribute = null;
-				}
+				} while (reinvoke);
 				break;
 			case '!':
 				// ma znaczenie tylko dla deklaracji DTD - gdy poprzedza go <
@@ -294,6 +344,38 @@ public class Slicer {
 				pos++;
 			}
 		}
+	}
+	
+	public ControlPoint getPreviousControlPointFrom(ControlPoint toFind){
+		ControlPoint result = null;
+		if(toFind!=null){
+			ControlPoint cp = null;
+			ListIterator<ControlPoint> li = controlPoints.listIterator();
+			while(cp!=toFind && li.hasNext()){
+				cp = li.next();
+			}
+			if(cp==toFind && li.hasPrevious()){
+				result = li.previous();
+			}
+		}
+		return result;
+	}
+	
+	public ControlPoint registerRegain(int pos, char ch){
+		ControlPoint cp = null;
+		return cp;
+	}
+
+	public ControlPoint registerRegain(ControlPoint cp){
+		logger.info(String.format("regaining error at %1$d on char=%2$d ['%3$s']", cp.getPosition(), (int)cp.getChar(), cp.getChar()));
+		modeHistory.addLast(SlicerMode.REGAIN_ERROR);
+		controlPointsHistory.addLast(cp);
+		return cp;
+	}
+	
+	public void addMode(SlicerMode mode){
+		modeList.addLast(mode);
+		modeHistory.addLast(mode);
 	}
 	
 	public LinkedList<ControlPoint> getControlPointsList() {

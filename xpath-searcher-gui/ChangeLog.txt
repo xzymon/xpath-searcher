@@ -19,3 +19,6 @@
 
 [v 0.0.3.alpha5] [28-04-2015]
 \ developing engine to parse XML and color text - minor changes (after crash)
+
+[v 0.0.3.alpha6.1] [29-04-2015]
+\ developing engine to parse XML and color text - backup before greater changes in logic
