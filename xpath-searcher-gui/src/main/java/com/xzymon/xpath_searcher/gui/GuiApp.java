@@ -242,7 +242,7 @@ public class GuiApp extends JFrame{
 								//StreamCutter cutter = new StreamCutter(bs, false);
 								//cutter.logReport();
 								Slicer slicer = new Slicer(bs);
-								List<Slice> slices = slicer.slice(bs);
+								List<Slice> slices = slicer.slice();
 								slicer.useHandler();
 								/*
 								for(Slice slice: slices){

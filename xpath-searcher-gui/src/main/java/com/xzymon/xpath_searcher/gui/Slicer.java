@@ -44,9 +44,13 @@ public class Slicer {
 	
 	public void useHandler(){
 		logEventsReport();
+		// przeanalizować history i stworzyć bloki względem trybów pracy
+		for(Slice slice: slist){
+			logger.info(slice.toString());
+		}
 	}
 	
-	public List<Slice> slice(InputStream is) throws SlicingException{
+	public List<Slice> slice() throws SlicingException{
 		slist = new LinkedList<Slice>();
 		modeList = new LinkedList<SlicerMode>();
 		// history
@@ -74,6 +78,7 @@ public class Slicer {
 			pre_cp = cp;
 			cp = controlPoints.get(cploop);
 			
+			modeHistory.addLast(modeList.getLast());
 			controlPointsHistory.addLast(cp);
 			
 			switch(cp.getChar()){
@@ -305,6 +310,7 @@ public class Slicer {
 				// powinno przełączać w tryb INSIDE_ATTRIBUTE jeśli poprzedni znak to spacja
 			}
 		}
+		modeHistory.addLast(modeList.getLast());
 		return slist;
 	}
 	
@@ -391,7 +397,7 @@ public class Slicer {
 	
 	public void addMode(SlicerMode mode){
 		modeList.addLast(mode);
-		modeHistory.addLast(mode);
+		//modeHistory.addLast(mode);
 	}
 	
 	public LinkedList<ControlPoint> getControlPointsList() {
@@ -417,7 +423,7 @@ public class Slicer {
 				pos++;
 				mode = modeIt.next();
 				controlPoint = cpIt.next();
-				logger.info(String.format("pos %1$d: mode: %2$s, controlPoint: pos=%3$d", pos, mode.toString(), controlPoint.getPosition()));
+				logger.info(String.format("pos %1$d: mode: %2$s, controlPoint: pos=%3$d, ch=%4$d[%5$s]", pos, mode.toString(), controlPoint.getPosition(), (int)controlPoint.getChar(), controlPoint.getChar()));
 			}
 		} else {
 			logger.info(String.format("lengths don't match : mode=%1$d, cp=%2$d", modeLength, cpLength));
