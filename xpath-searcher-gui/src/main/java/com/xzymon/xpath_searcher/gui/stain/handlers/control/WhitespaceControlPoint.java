@@ -1,4 +1,6 @@
-package com.xzymon.xpath_searcher.gui;
+package com.xzymon.xpath_searcher.gui.stain.handlers.control;
+
+import com.xzymon.xpath_searcher.gui.stain.exceptions.InvalidCharacterException;
 
 
 public class WhitespaceControlPoint extends MultiValuedAbstractControlPoint {

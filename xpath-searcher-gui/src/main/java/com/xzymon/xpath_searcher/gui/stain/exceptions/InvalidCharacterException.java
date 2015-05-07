@@ -1,4 +1,4 @@
-package com.xzymon.xpath_searcher.gui;
+package com.xzymon.xpath_searcher.gui.stain.exceptions;
 
 public class InvalidCharacterException extends Exception {
 	private static final long serialVersionUID = -693511940567176310L;

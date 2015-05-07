@@ -1,10 +1,6 @@
 Trzeba opracować koncepcję co właściwie robić z tymi Slice'ami
  - w jaką strukturę je złączyć
  - jak/jakie generować zdarzenia dla handlera
- 
-ERROR:
-	w razie wystąpienia kodu ERROR nie ma sensu korzystania z mechanizmu Exception 
-		bo to niszczy możliwość kontunuacji przetwarzania
-	
-Trzeba zmienić przetwarzanie atrybutów
-	atrybut kończy się na zakończeniu cytatu-wartości i odrazu po zamknięciu cytatu trzeba też zamknąć atrybut
+
+DO ZROBIENIA:
+ - implementacja ProcessingHandler'a kolorująca text

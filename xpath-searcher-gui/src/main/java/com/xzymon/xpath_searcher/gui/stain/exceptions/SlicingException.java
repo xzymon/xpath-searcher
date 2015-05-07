@@ -1,4 +1,6 @@
-package com.xzymon.xpath_searcher.gui;
+package com.xzymon.xpath_searcher.gui.stain.exceptions;
+
+import com.xzymon.xpath_searcher.gui.stain.handlers.control.ControlPoint;
 
 public class SlicingException extends Exception {
 	private static final long serialVersionUID = -2832820851192457719L;

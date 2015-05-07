@@ -1,4 +1,4 @@
-package com.xzymon.xpath_searcher.gui;
+package com.xzymon.xpath_searcher.gui.stain.slicers;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,6 +9,25 @@ import java.util.ListIterator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.xzymon.xpath_searcher.gui.stain.exceptions.InvalidCharacterException;
+import com.xzymon.xpath_searcher.gui.stain.exceptions.SlicingException;
+import com.xzymon.xpath_searcher.gui.stain.handlers.ProcessingHandler;
+import com.xzymon.xpath_searcher.gui.stain.handlers.Slice;
+import com.xzymon.xpath_searcher.gui.stain.handlers.SliceAttribute;
+import com.xzymon.xpath_searcher.gui.stain.handlers.SliceType;
+import com.xzymon.xpath_searcher.gui.stain.handlers.SlicerMode;
+import com.xzymon.xpath_searcher.gui.stain.handlers.control.ControlPoint;
+import com.xzymon.xpath_searcher.gui.stain.handlers.control.DoubleQuoteControlPoint;
+import com.xzymon.xpath_searcher.gui.stain.handlers.control.EqualsSignControlPoint;
+import com.xzymon.xpath_searcher.gui.stain.handlers.control.ExclamationMarkControlPoint;
+import com.xzymon.xpath_searcher.gui.stain.handlers.control.GreaterThanControlPoint;
+import com.xzymon.xpath_searcher.gui.stain.handlers.control.LessThanControlPoint;
+import com.xzymon.xpath_searcher.gui.stain.handlers.control.NoneControlPoint;
+import com.xzymon.xpath_searcher.gui.stain.handlers.control.QuestionMarkControlPoint;
+import com.xzymon.xpath_searcher.gui.stain.handlers.control.SingleQuoteControlPoint;
+import com.xzymon.xpath_searcher.gui.stain.handlers.control.SlashSignControlPoint;
+import com.xzymon.xpath_searcher.gui.stain.handlers.control.WhitespaceControlPoint;
 
 public class Slicer {
 	private static final Logger logger = LoggerFactory.getLogger(Slicer.class.getName());

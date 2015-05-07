@@ -1,4 +1,4 @@
-package com.xzymon.xpath_searcher.gui;
+package com.xzymon.xpath_searcher.gui.stain.handlers;
 
 public interface ProcessingHandler {
 	// dostarczanie informacji o trybach pracy w przedziałach znaków

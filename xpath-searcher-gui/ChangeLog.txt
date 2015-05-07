@@ -28,3 +28,9 @@
 
 [v 0.0.3.alpha6.3] [29-04-2015]
 \ developing engine to parse XML and color text - useHandler developing [very minor changes]
+
+[v 0.0.4] [07-05-2015]
+\ developing engine to parse XML and color text
++ reorganisation of packages
++ ImprovedSlicer - parses file and generates notifications for registered handler (-> invokes methods of a handler)
++ ProcessingHandler - an interface to get parsing notifications

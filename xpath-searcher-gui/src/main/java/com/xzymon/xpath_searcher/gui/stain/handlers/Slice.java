@@ -1,4 +1,4 @@
-package com.xzymon.xpath_searcher.gui;
+package com.xzymon.xpath_searcher.gui.stain.handlers;
 
 import java.util.LinkedList;
 import java.util.List;

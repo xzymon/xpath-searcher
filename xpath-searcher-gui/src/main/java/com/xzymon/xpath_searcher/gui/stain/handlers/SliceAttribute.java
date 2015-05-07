@@ -1,4 +1,4 @@
-package com.xzymon.xpath_searcher.gui;
+package com.xzymon.xpath_searcher.gui.stain.handlers;
 
 public class SliceAttribute {
 	private int firstCharOffset = -1;

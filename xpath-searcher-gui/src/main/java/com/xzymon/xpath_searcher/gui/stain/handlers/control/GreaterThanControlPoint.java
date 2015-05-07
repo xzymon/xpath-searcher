@@ -1,4 +1,4 @@
-package com.xzymon.xpath_searcher.gui;
+package com.xzymon.xpath_searcher.gui.stain.handlers.control;
 
 public class GreaterThanControlPoint extends AbstractControlPoint {
 

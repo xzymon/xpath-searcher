@@ -48,6 +48,11 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
+import com.xzymon.xpath_searcher.gui.stain.exceptions.SlicingException;
+import com.xzymon.xpath_searcher.gui.stain.handlers.SimpleLoggingHandler;
+import com.xzymon.xpath_searcher.gui.stain.handlers.SliceRepresentation;
+import com.xzymon.xpath_searcher.gui.stain.slicers.ImprovedSlicer;
+
 public class GuiApp extends JFrame{
 	private static final long serialVersionUID = 3219548713775085362L;
 	
@@ -241,8 +246,9 @@ public class GuiApp extends JFrame{
 								bs = new ByteArrayInputStream(bytes);
 								//StreamCutter cutter = new StreamCutter(bs, false);
 								//cutter.logReport();
-								Slicer slicer = new Slicer(bs);
-								List<Slice> slices = slicer.slice();
+								ImprovedSlicer slicer = new ImprovedSlicer(bs);
+								slicer.setProcessingHandler(new SimpleLoggingHandler());
+								List<SliceRepresentation> slices = slicer.slice();
 								slicer.useHandler();
 								/*
 								for(Slice slice: slices){
