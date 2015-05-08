@@ -59,9 +59,12 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 	public void useHandler(){
 		AttributeRepresentation attr = null;
 		ErrorRepresentation error = null;
+		int rtFirstPos=0, rtLastPos=0;	//rawTest positions
 		
 		for(SliceRepresentation sliceR: slicesR){
 			logger.info(sliceR.toString());
+			
+			//TODO: here
 			
 			if(sliceR.isOther()){
 				handler.otherTag(sliceR.getStartPosition(), sliceR.getEndPosition());

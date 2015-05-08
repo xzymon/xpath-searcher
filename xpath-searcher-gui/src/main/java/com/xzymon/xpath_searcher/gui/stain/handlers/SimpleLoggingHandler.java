@@ -7,8 +7,8 @@ public class SimpleLoggingHandler implements ProcessingHandler {
 	private static final Logger logger = LoggerFactory.getLogger(SimpleLoggingHandler.class.getName());
 
 	@Override
-	public void otherTag(int startPos, int length) {
-		logger.info(String.format("handler invoked for event %1$s(%2$d, %3$d)", "otherTag", startPos, length));
+	public void otherTag(int startPos, int lastPos) {
+		logger.info(String.format("handler invoked for event %1$s(%2$d, %3$d)", "otherTag", startPos, lastPos));
 	}
 
 	@Override
@@ -17,13 +17,13 @@ public class SimpleLoggingHandler implements ProcessingHandler {
 	}
 
 	@Override
-	public void tagName(int startPos, int length) {
-		logger.info(String.format("handler invoked for event %1$s(%2$d, %3$d)", "tagName", startPos, length));
+	public void tagName(int startPos, int lastPos) {
+		logger.info(String.format("handler invoked for event %1$s(%2$d, %3$d)", "tagName", startPos, lastPos));
 	}
 
 	@Override
-	public void attributeName(int startPos, int length) {
-		logger.info(String.format("handler invoked for event %1$s(%2$d, %3$d)", "attributeName", startPos, length));
+	public void attributeName(int startPos, int lastPos) {
+		logger.info(String.format("handler invoked for event %1$s(%2$d, %3$d)", "attributeName", startPos, lastPos));
 	}
 
 	@Override
@@ -32,8 +32,8 @@ public class SimpleLoggingHandler implements ProcessingHandler {
 	}
 
 	@Override
-	public void attributeValue(int startPos, int length) {
-		logger.info(String.format("handler invoked for event %1$s(%2$d, %3$d)", "attributeValue", startPos, length));
+	public void attributeValue(int startPos, int lastPos) {
+		logger.info(String.format("handler invoked for event %1$s(%2$d, %3$d)", "attributeValue", startPos, lastPos));
 	}
 
 	@Override
@@ -42,8 +42,13 @@ public class SimpleLoggingHandler implements ProcessingHandler {
 	}
 
 	@Override
-	public void error(int startPos, int length) {
-		logger.info(String.format("handler invoked for event %1$s(%2$d, %3$d)", "error", startPos, length));
+	public void error(int startPos, int lastPos) {
+		logger.info(String.format("handler invoked for event %1$s(%2$d, %3$d)", "error", startPos, lastPos));
+	}
+
+	@Override
+	public void rawTest(int startPos, int lastPos) {
+		logger.info(String.format("handler invoked for event %1$s(%2$d, %3$d)", "rawTest", startPos, lastPos));
 	}
 
 }

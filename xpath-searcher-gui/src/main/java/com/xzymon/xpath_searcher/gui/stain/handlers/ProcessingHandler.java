@@ -2,12 +2,13 @@ package com.xzymon.xpath_searcher.gui.stain.handlers;
 
 public interface ProcessingHandler {
 	// dostarczanie informacji o trybach pracy w przedziałach znaków
-	void otherTag(int startPos, int length);
+	void otherTag(int startPos, int lastPos);
 	void lessThanStartChar(int position);
-	void tagName(int startPos, int length);
-	void attributeName(int startPos, int length);
+	void tagName(int startPos, int lastPos);
+	void attributeName(int startPos, int lastPos);
 	void attributeEqualsSign(int position);
-	void attributeValue(int startPos, int length);
+	void attributeValue(int startPos, int lastPos);
 	void greaterThanEndingChar(int position);
-	void error(int startPos, int length);
+	void error(int startPos, int lastPos);
+	void rawTest(int startPos, int lastPos);
 }

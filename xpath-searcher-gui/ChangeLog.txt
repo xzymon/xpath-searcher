@@ -34,3 +34,7 @@
 + reorganisation of packages
 + ImprovedSlicer - parses file and generates notifications for registered handler (-> invokes methods of a handler)
 + ProcessingHandler - an interface to get parsing notifications
+
+[v 0.0.5.alpha] [08-05-2015]
+\ developing ImprovedSlicer to generate rawTest notification & StainTextHandler to insert styled text into JTextPane
++ XmlStylePalette & XmlStylePalettesManager

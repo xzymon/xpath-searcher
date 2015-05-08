@@ -48,6 +48,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
+import com.xzymon.xpath_searcher.gui.stain.XmlStylePalettesManager;
 import com.xzymon.xpath_searcher.gui.stain.exceptions.SlicingException;
 import com.xzymon.xpath_searcher.gui.stain.handlers.SimpleLoggingHandler;
 import com.xzymon.xpath_searcher.gui.stain.handlers.SliceRepresentation;
@@ -69,6 +70,7 @@ public class GuiApp extends JFrame{
 	private JTextField searchField;
 	
 	private final JFileChooser fileChooser = new JFileChooser();
+	private final XmlStylePalettesManager stylesManager = new XmlStylePalettesManager();
 
 	public static void main(String[] args) {
 		try{
@@ -164,6 +166,8 @@ public class GuiApp extends JFrame{
 
 	private Properties loadProperties(){
 		Properties props = new Properties();
+		String strKey, strValue;
+		boolean managerAdded = false;
 		
 		InputStream is = this.getClass().getResourceAsStream(PROPS_PATH);
 		if(is!=null){
@@ -180,7 +184,12 @@ public class GuiApp extends JFrame{
 		else {
 			logger.info("Loaded properties: ");
 			for(Object key: props.keySet()){
-				logger.info(String.format("Loaded property: %1$s=%2$s", key, props.get(key)));
+				managerAdded = false;
+				strKey = key.toString();
+				strValue = props.get(key).toString();
+				logger.info(String.format("Loaded property: %1$s=%2$s", strKey, strValue));
+				stylesManager.overrideStyleByParameter(strKey, strValue);
+				logger.info("Manager : " + managerAdded);
 			}
 		}
 		

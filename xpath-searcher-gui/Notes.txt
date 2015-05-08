@@ -3,4 +3,5 @@ Trzeba opracować koncepcję co właściwie robić z tymi Slice'ami
  - jak/jakie generować zdarzenia dla handlera
 
 DO ZROBIENIA:
- - implementacja ProcessingHandler'a kolorująca text
+ - wymyślić jak generować rawText dla handlera
+ - implementacja ProcessingHandler'a kolorująca text : wstawianie tekstu przez handlera
