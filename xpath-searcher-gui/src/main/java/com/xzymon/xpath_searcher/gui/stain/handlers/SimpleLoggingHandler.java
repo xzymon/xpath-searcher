@@ -20,6 +20,11 @@ public class SimpleLoggingHandler implements ProcessingHandler {
 	public void tagName(int startPos, int lastPos) {
 		logger.info(String.format("handler invoked for event %1$s(%2$d, %3$d)", "tagName", startPos, lastPos));
 	}
+	
+	@Override
+	public void tagGap(int startPos, int lastPos) {
+		logger.info(String.format("handler invoked for event %1$s(%2$d, %3$d)", "tagGap", startPos, lastPos));
+	}
 
 	@Override
 	public void attributeName(int startPos, int lastPos) {
@@ -47,8 +52,13 @@ public class SimpleLoggingHandler implements ProcessingHandler {
 	}
 
 	@Override
-	public void rawTest(int startPos, int lastPos) {
-		logger.info(String.format("handler invoked for event %1$s(%2$d, %3$d)", "rawTest", startPos, lastPos));
+	public void closingSlash(int position) {
+		logger.info(String.format("handler invoked for event %1$s(%2$d)", "closingSlash", position));
 	}
 
-}
+	@Override
+	public void rawText(int startPos, int lastPos) {
+		logger.info(String.format("handler invoked for event %1$s(%2$d, %3$d)", "rawText", startPos, lastPos));
+	}
+
+	}

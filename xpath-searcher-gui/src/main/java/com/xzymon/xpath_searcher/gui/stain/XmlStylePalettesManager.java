@@ -9,12 +9,30 @@ import org.slf4j.LoggerFactory;
 public class XmlStylePalettesManager {
 	private static final Logger logger = LoggerFactory.getLogger(XmlStylePalettesManager.class.getName());
 	
+	public static final String DEFAULT_PALETTE_NAME = "default";
+	
 	private Map<String, XmlStylePalette> styles = new HashMap<String, XmlStylePalette>();
+	
+	private XmlStylePalette currentPalette;
+	
+	public XmlStylePalettesManager(){
+		XmlStylePalette defaultPalette = new XmlStylePalette(DEFAULT_PALETTE_NAME);
+		styles.put(DEFAULT_PALETTE_NAME, defaultPalette);
+		currentPalette = styles.get(DEFAULT_PALETTE_NAME);
+	}
 	
 	public XmlStylePalette getByName(String name){
 		return styles.get(name);
 	}
 	
+	public XmlStylePalette getCurrentPalette() {
+		return currentPalette;
+	}
+
+	public void setCurrentPalette(XmlStylePalette currentPalette) {
+		this.currentPalette = currentPalette;
+	}
+
 	public boolean overrideStyleByParameter(String paramName, String paramValue){
 		boolean overriden = false;
 		String[] parameterParts = paramName.split("\\.");

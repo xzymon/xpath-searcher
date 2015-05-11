@@ -45,10 +45,13 @@ public class XmlStylePalette {
 	
 	private SimpleAttributeSet other = new SimpleAttributeSet(defaultFlat);
 	private SimpleAttributeSet tagCasing = new SimpleAttributeSet(defaultFlat);
+	private SimpleAttributeSet tagName = new SimpleAttributeSet(defaultFlat);
+	private SimpleAttributeSet tagGap = new SimpleAttributeSet(defaultFlat);
 	private SimpleAttributeSet attributeName = new SimpleAttributeSet(defaultFlat);
 	private SimpleAttributeSet attributeEqualsSign = new SimpleAttributeSet(defaultFlat);
 	private SimpleAttributeSet attributeValue = new SimpleAttributeSet(defaultFlat);
 	private SimpleAttributeSet error = new SimpleAttributeSet(defaultFlat);
+	private SimpleAttributeSet closingSlash = new SimpleAttributeSet(defaultFlat);
 	private SimpleAttributeSet rawText = new SimpleAttributeSet(defaultFlat);
 	
 	public XmlStylePalette(String name){
@@ -56,10 +59,13 @@ public class XmlStylePalette {
 		
 		styledElements.put("other", other);
 		styledElements.put("tagCasing", tagCasing);
+		styledElements.put("tagName", tagName);
+		styledElements.put("tagGap", tagGap);
 		styledElements.put("attributeName", attributeName);
 		styledElements.put("attributeEqualsSign", attributeEqualsSign);
 		styledElements.put("attributeValue", attributeValue);
 		styledElements.put("error", error);
+		styledElements.put("closingSlash", closingSlash);
 		styledElements.put("rawText", rawText);
 		
 		styledAttributes.put("background", StyleConstants.Background);
@@ -107,6 +113,22 @@ public class XmlStylePalette {
 		this.tagCasing = tagCasing;
 	}
 
+	public SimpleAttributeSet getTagName() {
+		return tagName;
+	}
+
+	public void setTagName(SimpleAttributeSet tagName) {
+		this.tagName = tagName;
+	}
+
+	public SimpleAttributeSet getTagGap() {
+		return tagGap;
+	}
+	
+	public void setTagGap(SimpleAttributeSet tagGap) {
+		this.tagGap = tagGap;
+	}
+
 	public SimpleAttributeSet getAttributeName() {
 		return attributeName;
 	}
@@ -142,7 +164,15 @@ public class XmlStylePalette {
 	public static SimpleAttributeSet getDefaultFlat() {
 		return defaultFlat;
 	}
+	
+	public SimpleAttributeSet getClosingSlash() {
+		return closingSlash;
+	}
 
+	public void setClosingSlash(SimpleAttributeSet closingSlash) {
+		this.closingSlash = closingSlash;
+	}
+	
 	public SimpleAttributeSet getRawText() {
 		return rawText;
 	}
@@ -186,7 +216,7 @@ public class XmlStylePalette {
 						case "java.lang.Integer":
 							if(paramValue!=null){
 								try{
-									intValue = Integer.parseInt(paramValue, 16);
+									intValue = Integer.parseInt(paramValue, 10);
 									value = intValue;
 								} catch (NumberFormatException ex){
 									
@@ -241,7 +271,7 @@ public class XmlStylePalette {
 			case "java.lang.Integer":
 				if(paramValue!=null){
 					try{
-						intValue = Integer.parseInt(paramValue, 16);
+						intValue = Integer.parseInt(paramValue, 10);
 						value = intValue;
 						//logger.info("integer");
 					} catch (NumberFormatException ex){

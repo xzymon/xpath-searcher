@@ -38,3 +38,6 @@
 [v 0.0.5.alpha] [08-05-2015]
 \ developing ImprovedSlicer to generate rawTest notification & StainTextHandler to insert styled text into JTextPane
 + XmlStylePalette & XmlStylePalettesManager
+
+[v 0.0.5] [11-05-2015]
++ now text is colored when the file (XML-compliant) is loaded

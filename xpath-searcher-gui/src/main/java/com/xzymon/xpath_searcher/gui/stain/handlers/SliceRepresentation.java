@@ -9,10 +9,8 @@ public class SliceRepresentation {
 	private int nameStartsAt = -1;
 	private int nameEndsAt = -1;
 	private int closingSlashAt = -1;
-	private boolean closing = false;
-	private boolean likelySelfClosing = false;
-	private boolean selfClosing = false;
 	private boolean other = false;
+	private boolean raw = false;
 	private List<AttributeRepresentation> attributes = null;
 	private List<ErrorRepresentation> errors = null;
 	private List<SliceInterior> interiors = null;
@@ -63,6 +61,13 @@ public class SliceRepresentation {
 	
 	public void setOther(boolean other){
 		this.other = other;
+	}
+	
+	public boolean isRaw() {
+		return raw;
+	}
+	public void setRaw(boolean raw) {
+		this.raw = raw;
 	}
 	
 	public List<AttributeRepresentation> getAttributes() {
@@ -147,9 +152,9 @@ public class SliceRepresentation {
 		return "SliceRepresentation [startsAt=" + startsAt + ", endsAt="
 				+ endsAt + ", nameStartsAt=" + nameStartsAt + ", nameEndsAt="
 				+ nameEndsAt + ", closingSlashAt=" + closingSlashAt
-				+ ", closing=" + closing + ", likelySelfClosing="
-				+ likelySelfClosing + ", selfClosing=" + selfClosing
-				+ ", attributes={" + attributes + "}, errors={" + errSb.toString() + "}, interiors={"
+				+ ", closing=" + isClosing() + ", selfClosing=" + isSelfClosing()
+				+ ", raw=" + raw + ", attributes={" + attributes 
+				+ "}, errors={" + errSb.toString() + "}, interiors={"
 				+ intSb.toString() + "}]";
 	}
 	

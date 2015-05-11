@@ -52,6 +52,7 @@ import com.xzymon.xpath_searcher.gui.stain.XmlStylePalettesManager;
 import com.xzymon.xpath_searcher.gui.stain.exceptions.SlicingException;
 import com.xzymon.xpath_searcher.gui.stain.handlers.SimpleLoggingHandler;
 import com.xzymon.xpath_searcher.gui.stain.handlers.SliceRepresentation;
+import com.xzymon.xpath_searcher.gui.stain.handlers.StainTextPaneHandler;
 import com.xzymon.xpath_searcher.gui.stain.slicers.ImprovedSlicer;
 
 public class GuiApp extends JFrame{
@@ -70,7 +71,9 @@ public class GuiApp extends JFrame{
 	private JTextField searchField;
 	
 	private final JFileChooser fileChooser = new JFileChooser();
-	private final XmlStylePalettesManager stylesManager = new XmlStylePalettesManager();
+	private final XmlStylePalettesManager palettesManager = new XmlStylePalettesManager();
+	
+	private StainTextPaneHandler stainHandler = null;
 
 	public static void main(String[] args) {
 		try{
@@ -156,7 +159,6 @@ public class GuiApp extends JFrame{
 		analysePane.setAutoscrolls(true);
 		centralPanel.add(new JScrollPane(analysePane));
 		
-		
 		mainPanel.add(topPanel, BorderLayout.NORTH);
 		mainPanel.add(centralPanel, BorderLayout.CENTER);
 		this.add(mainPanel);
@@ -188,7 +190,7 @@ public class GuiApp extends JFrame{
 				strKey = key.toString();
 				strValue = props.get(key).toString();
 				logger.info(String.format("Loaded property: %1$s=%2$s", strKey, strValue));
-				stylesManager.overrideStyleByParameter(strKey, strValue);
+				palettesManager.overrideStyleByParameter(strKey, strValue);
 				logger.info("Manager : " + managerAdded);
 			}
 		}
@@ -256,7 +258,10 @@ public class GuiApp extends JFrame{
 								//StreamCutter cutter = new StreamCutter(bs, false);
 								//cutter.logReport();
 								ImprovedSlicer slicer = new ImprovedSlicer(bs);
-								slicer.setProcessingHandler(new SimpleLoggingHandler());
+								//slicer.setProcessingHandler(new SimpleLoggingHandler());
+								analysePane.setDocument(new DefaultStyledDocument());
+								stainHandler = new StainTextPaneHandler(analysePane, palettesManager, slicer.getSavedStream());
+								slicer.setProcessingHandler(stainHandler);
 								List<SliceRepresentation> slices = slicer.slice();
 								slicer.useHandler();
 								/*
@@ -266,7 +271,7 @@ public class GuiApp extends JFrame{
 								*/
 								logger.info("The number of slices is : " + slices.size());
 								//
-								analysePane.setText(str);
+								//analysePane.setText(str);
 							}
 						} catch (FileNotFoundException ex) {
 							logger.error(String.format("FileNotFoundException during: new FileInputStream(\"%1$s\")", file.getAbsolutePath()));

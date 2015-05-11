@@ -1,7 +1,9 @@
 Trzeba opracować koncepcję co właściwie robić z tymi Slice'ami
  - w jaką strukturę je złączyć
- - jak/jakie generować zdarzenia dla handlera
-
-DO ZROBIENIA:
- - wymyślić jak generować rawText dla handlera
- - implementacja ProcessingHandler'a kolorująca text : wstawianie tekstu przez handlera
+ - jakiś model obiektowy umożliwiający przeglądanie / nawigowanie po strukturze ?
+ 	trzeba by to jakoś powiązać z DOM'em i/lub silnikiem XPath
+ 	
+Uwaga : obecnie ImprovedSlicer prawdopodobnie jeszcze posiada pewne braki jeśli chodzi o wykrywanie błędów w Slice'ach.
+Poza tym posiada jeszcze pewne śmieci w kodzie (nadmiarowe, niepotrzebne zmienne itd...).
+Można by jeszcze upiększyć kod (poskracać, pododawać metody zamiast powtarzającego się kodu.
+Można by wywalić niepotrzebne klasy i w ten sposób uprościć organizację kodu

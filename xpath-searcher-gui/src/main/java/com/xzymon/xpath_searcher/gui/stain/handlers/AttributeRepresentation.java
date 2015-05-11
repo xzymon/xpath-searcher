@@ -12,6 +12,15 @@ public class AttributeRepresentation implements SliceInterior {
 	private boolean singleQuoted = false;
 	private boolean doubleQuoted = false;
 	
+	@Override
+	public int getStartPosition() {
+		return startsAt;
+	}
+	@Override
+	public int getEndPosition() {
+		return endQuotationMarkAt;
+	}
+	
 	public boolean hasOwner(){
 		return owner!=null;
 	}
@@ -89,4 +98,15 @@ public class AttributeRepresentation implements SliceInterior {
 		} 
 		return false;
 	}
+	@Override
+	public String toString() {
+		return "\nAttributeRepresentation [owner=" + owner + ", startsAt="
+				+ startsAt + ", nameEndsAt=" + nameEndsAt + ", equalsSignAt="
+				+ equalsSignAt + ", startQuotationMarkAt="
+				+ startQuotationMarkAt + ", endQuotationMarkAt="
+				+ endQuotationMarkAt + ", hasValue=" + hasValue
+				+ ", singleQuoted=" + singleQuoted + ", doubleQuoted="
+				+ doubleQuoted + "]";
+	}
+	
 }

@@ -26,6 +26,7 @@ import com.xzymon.xpath_searcher.gui.stain.handlers.control.EqualsSignControlPoi
 import com.xzymon.xpath_searcher.gui.stain.handlers.control.ExclamationMarkControlPoint;
 import com.xzymon.xpath_searcher.gui.stain.handlers.control.GreaterThanControlPoint;
 import com.xzymon.xpath_searcher.gui.stain.handlers.control.LessThanControlPoint;
+import com.xzymon.xpath_searcher.gui.stain.handlers.control.NoneControlPoint;
 import com.xzymon.xpath_searcher.gui.stain.handlers.control.QuestionMarkControlPoint;
 import com.xzymon.xpath_searcher.gui.stain.handlers.control.SingleQuoteControlPoint;
 import com.xzymon.xpath_searcher.gui.stain.handlers.control.SlashSignControlPoint;
@@ -59,20 +60,30 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 	public void useHandler(){
 		AttributeRepresentation attr = null;
 		ErrorRepresentation error = null;
-		int rtFirstPos=0, rtLastPos=0;	//rawTest positions
+		
+		int gapStart=-1, gapEnd=-1;
 		
 		for(SliceRepresentation sliceR: slicesR){
 			logger.info(sliceR.toString());
 			
 			//TODO: here
-			
-			if(sliceR.isOther()){
+			if(sliceR.isRaw()){
+				handler.rawText(sliceR.getStartPosition(), sliceR.getEndPosition());
+			} else if(sliceR.isOther()){
 				handler.otherTag(sliceR.getStartPosition(), sliceR.getEndPosition());
 			} else {
 				handler.lessThanStartChar(sliceR.getStartPosition());
+				if(sliceR.isClosing()){
+					handler.closingSlash(sliceR.getClosingSlashPosition());
+				}
 				handler.tagName(sliceR.getNameStartPosition(), sliceR.getNameEndPosition());
+				gapStart = sliceR.getNameEndPosition()+1;
 				if(sliceR.getInterior()!=null){
 					for(SliceInterior sInt : sliceR.getInterior()){
+						gapEnd = sInt.getStartPosition()-1;
+						if(gapEnd>=gapStart){
+							handler.tagGap(gapStart, gapEnd);
+						}
 						if(sInt instanceof AttributeRepresentation){
 							attr = (AttributeRepresentation) sInt;
 							handler.attributeName(attr.getStartsAt(), attr.getNameEndsAt());
@@ -83,7 +94,11 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 							error = (ErrorRepresentation) sInt;
 							handler.error(error.getStartPosition(), error.getEndPosition());
 						}
+						gapStart = sInt.getEndPosition()+1;
 					}
+				}
+				if(sliceR.isSelfClosing()){
+					handler.closingSlash(sliceR.getClosingSlashPosition());
 				}
 				handler.greaterThanEndingChar(sliceR.getEndPosition());
 			}
@@ -127,6 +142,7 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 			case '<':
 				switch(modeList.getLast()){
 				case NONE:
+					insertRawSlice(cp);
 					curSlice = new SliceRepresentation();
 					curSlice.setStartPosition(cp.getPosition());
 					slicesR.addLast(curSlice);
@@ -164,7 +180,7 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 						}
 						if(pre_cp.getPosition()<cp.getPosition()-1 && (pre_cp.getChar()=='<' || pre_cp.getChar()=='/')){
 							curSlice.setNameStartPosition(pre_cp.getPosition()+1);
-							curSlice.setNameEndPosition(pre_cp.getPosition()-1);
+							curSlice.setNameEndPosition(cp.getPosition()-1);
 							curSlice.setEndPosition(cp.getPosition());
 						}
 						curSlice.setEndPosition(cp.getPosition());
@@ -173,7 +189,7 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 						break;
 					case ERROR:
 						modeList.removeLast();
-						regainError(cp, curError);
+						regainError(cp, curError, curSlice);
 						pre_cp = getPreviousControlPointFrom(pre_cp);
 						reinvoke = true;
 					default:
@@ -284,7 +300,7 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 							break;
 						case ERROR:
 							modeList.removeLast();
-							regainError(cp, curError);
+							regainError(cp, curError, curSlice);
 							pre_cp = getPreviousControlPointFrom(pre_cp);
 							reinvoke = true;
 						default:
@@ -325,18 +341,37 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 							curError.setEndPosition(cp.getPosition()-1);
 							curAttr = null;
 							curSlice.addError(curError);
+							logger.info("Attribute converted to ERROR");
 							curSlice.addInterior(curError);
 							reinvoke = true;
 							break;
 						case INSIDE_SLICE:
-							if(pre_cp.getPosition()<cp.getPosition()-1 && (pre_cp.getChar()=='<' || pre_cp.getChar()=='/')){
+							if(pre_cp.getPosition()<cp.getPosition()-1 && ((pre_cp.getChar()=='<' /*&& curSlice.getStartPosition()!=pre_cp.getPosition()*/) || pre_cp.getChar()=='/')){
 								curSlice.setNameStartPosition(pre_cp.getPosition()+1);
 								curSlice.setNameEndPosition(cp.getPosition()-1);
+							}
+							if(pre_cp.getPosition()<cp.getPosition()-1 && 
+									(pre_cp.getChar()==' ' || pre_cp.getChar()=='\t' || pre_cp.getChar()=='\n' 
+									|| pre_cp.getChar()=='\r' || pre_cp.getChar()=='\f' )){
+								curError = new ErrorRepresentation();
+								curError.setStartPosition(pre_cp.getPosition()+1);
+								curError.setEndPosition(cp.getPosition()-1);
+								logger.info(String.format("ERROR: startPos=%1$d, endPos=%2$d", curError.getStartPosition(), curError.getEndPosition()));
+								curSlice.addError(curError);
+								curSlice.addInterior(curError);
+							}
+							if(pre_cp.getPosition()<cp.getPosition()-1 && (pre_cp.getChar()=='<' && curSlice.getStartPosition()!=pre_cp.getPosition())){
+								curError = new ErrorRepresentation();
+								curError.setStartPosition(pre_cp.getPosition()+1);
+								curError.setEndPosition(cp.getPosition()-1);
+								logger.info(String.format("ERROR: startPos=%1$d, endPos=%2$d", curError.getStartPosition(), curError.getEndPosition()));
+								curSlice.addError(curError);
+								curSlice.addInterior(curError);
 							}
 							break;
 						case ERROR:
 							modeList.removeLast();
-							regainError(cp, curError);
+							regainError(cp, curError, curSlice);
 							pre_cp = getPreviousControlPointFrom(pre_cp);
 							reinvoke = true;
 						default:
@@ -370,7 +405,7 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 							break;
 						case ERROR:
 							modeList.removeLast();
-							regainError(cp, curError);
+							regainError(cp, curError, curSlice);
 							pre_cp = getPreviousControlPointFrom(pre_cp);
 							reinvoke = true;
 						default:
@@ -393,6 +428,11 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 			default:
 				// powinno przełączać w tryb INSIDE_ATTRIBUTE jeśli poprzedni znak to spacja
 			}
+		}
+		// + ewentualny zamykający rawSlice
+		if(savedStream.length>0){
+			cp = new NoneControlPoint(savedStream.length-1);
+			insertRawSlice(cp);
 		}
 		return slicesR;
 	}
@@ -447,6 +487,38 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 		}
 	}
 
+	private void insertRawSlice(ControlPoint cp){
+		// justAfterEnding is after previous Slice
+		int justAfterEnding = -1;
+		// justBeforeBegining is before this Slice
+		int justBeforeBegining = -1;
+		SliceRepresentation rawSlice = null;
+		
+		justBeforeBegining = cp.getPosition()-1;
+		if(justAfterEnding<justBeforeBegining && justBeforeBegining>-1){
+			if(slicesR.size()>0){
+				justAfterEnding=slicesR.getLast().getEndPosition()+1;
+			} 
+			if(justBeforeBegining>=justAfterEnding){
+				rawSlice = new SliceRepresentation();
+				rawSlice.setRaw(true);
+				rawSlice.setStartPosition(justAfterEnding);
+				rawSlice.setEndPosition(justBeforeBegining);
+				slicesR.addLast(rawSlice);
+			}
+		}
+	}
+	
+	
+	
+	public byte[] getSavedStream() {
+		return savedStream;
+	}
+
+	public void setSavedStream(byte[] savedStream) {
+		this.savedStream = savedStream;
+	}
+
 	public ControlPoint getPreviousControlPointFrom(ControlPoint toFind){
 		ControlPoint result = null;
 		if(toFind!=null){
@@ -471,9 +543,11 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 		return cp;
 	}
 
-	public ControlPoint regainError(ControlPoint cp, ErrorRepresentation curError){
+	public ControlPoint regainError(ControlPoint cp, ErrorRepresentation curError, SliceRepresentation curSlice){
 		logger.info(String.format("regaining error at %1$d on char=%2$d ['%3$s']", cp.getPosition(), (int)cp.getChar(), cp.getChar()));
 		curError.setEndPosition(cp.getPosition()-1);
+		curSlice.addError(curError);
+		curSlice.addInterior(curError);
 		return cp;
 	}
 	
