@@ -7,3 +7,28 @@ Uwaga : obecnie ImprovedSlicer prawdopodobnie jeszcze posiada pewne braki jeśli
 Poza tym posiada jeszcze pewne śmieci w kodzie (nadmiarowe, niepotrzebne zmienne itd...).
 Można by jeszcze upiększyć kod (poskracać, pododawać metody zamiast powtarzającego się kodu.
 Można by wywalić niepotrzebne klasy i w ten sposób uprościć organizację kodu
+
+PO PIERWSZE : przerobić wczytywanie pliku z InputStream na Reader (ok, jsoup potrzebuje String)
+	bo w tej chwili pojawia się rozsunięcie między tekstem wstawianym a usuwanym przy podmianie stylu
+	- prawdopodobnie z powodu że źródło jest tablicą bajtową, a Document pewnie używa char 
+
+
+CELE:
+wbudować coś przechowującego DOM we wrapper JTextPane
+OK		zrobić żeby wrapper JTextPane nie umożliwiał modyfikowania(dodawania, usuwania) tekstu z klawiatury 
+OK		 - choć ma umożliwiać zaznaczanie
+{OK}	wrapper ma mieć ładne API
+OK		przenieść kolorowanie do wrappera
+
+->
+wrapper mógłby mieć podpinaną (wstrzykiwalną) konsolę do wpisywania poleceń i zwracania tekstowych komunikatów z wykonania poleceń
+niech też reaguje na \t wyświetlając dostępne polecenia
+ * Obsługiwane polecenia * [znak zachęty] = poprzedzający $
+   $ find <wzorzec> -> znajduje wzorzec (przeprowadza ewaluację i podświetla wszystkie wystąpienia w dokumencie)
+   $ find --iterate <wzorzec> -> kompiluje wzorzec, oblicza ilość spełniających elementów, zwraca komunikat o ilości wykrytych elementów - i jeżeli >0 to oczekuje na "next" do podświetlenia kolejnego elementu lub "exit" do przerwania iteracji
+   $ find -i <wzorzec> -> jak wyżej
+   $ uloc -> skrót od unique-location
+   $ unique-location -> oblicza unikalne położenie elementu na którym jest kursor w dokumencie
+   $ iterate -> iteruje po WSZYSTKICH elementach (i atrybutach) w dokumencie - zwraca komunikat o ilości i oczekuje "next" lub "exit"
+   $ iterate --elements-only -> iteruje tylko po elementach
+   

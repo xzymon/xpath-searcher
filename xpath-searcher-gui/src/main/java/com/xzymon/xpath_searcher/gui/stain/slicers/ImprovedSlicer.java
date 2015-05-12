@@ -57,6 +57,16 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 		}
 	}
 	
+	public ImprovedSlicer(byte[] savedStream){
+		this.savedStream = savedStream;
+	}
+	
+	public void slice() throws SlicingException{
+		findControlPoints();
+		getSlices();
+		useHandler();
+	}
+	
 	public void useHandler(){
 		AttributeRepresentation attr = null;
 		ErrorRepresentation error = null;
@@ -105,25 +115,20 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 		}
 	}
 	
-	public List<SliceRepresentation> slice() throws SlicingException{
+	private List<SliceRepresentation> getSlices() throws SlicingException{
 		modeList = new LinkedList<SlicerMode>();
 		
 		SliceRepresentation curSlice = null;
 		AttributeRepresentation curAttr = null;
 		ErrorRepresentation curError = null;
 		slicesR = new LinkedList<SliceRepresentation>();
-		LinkedList<AttributeRepresentation> attrsR = new LinkedList<AttributeRepresentation>();
-		LinkedList<ErrorRepresentation> errorsR = new LinkedList<ErrorRepresentation>();
-		
-		Slice currentSlice = null;
-		SliceAttribute currentAttribute = null;
 		
 		boolean reinvoke = false;
 		boolean dropAttr = false;
 		
 		addMode(SlicerMode.NONE);
 				
-		findControlPoints();
+		//findControlPoints();
 		int cplength = controlPoints.size();
 		ControlPoint cp = null;
 		ControlPoint pre_cp = null;
@@ -508,8 +513,6 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 			}
 		}
 	}
-	
-	
 	
 	public byte[] getSavedStream() {
 		return savedStream;

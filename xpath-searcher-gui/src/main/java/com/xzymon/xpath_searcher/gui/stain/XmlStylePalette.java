@@ -53,6 +53,7 @@ public class XmlStylePalette {
 	private SimpleAttributeSet error = new SimpleAttributeSet(defaultFlat);
 	private SimpleAttributeSet closingSlash = new SimpleAttributeSet(defaultFlat);
 	private SimpleAttributeSet rawText = new SimpleAttributeSet(defaultFlat);
+	private SimpleAttributeSet selection = new SimpleAttributeSet(defaultFlat);
 	
 	public XmlStylePalette(String name){
 		this.name = name;
@@ -67,6 +68,7 @@ public class XmlStylePalette {
 		styledElements.put("error", error);
 		styledElements.put("closingSlash", closingSlash);
 		styledElements.put("rawText", rawText);
+		styledElements.put("selection", selection);
 		
 		styledAttributes.put("background", StyleConstants.Background);
 		styledAttributes.put("foreground", StyleConstants.Foreground);
@@ -171,6 +173,14 @@ public class XmlStylePalette {
 
 	public void setClosingSlash(SimpleAttributeSet closingSlash) {
 		this.closingSlash = closingSlash;
+	}
+	
+	public SimpleAttributeSet getSelection() {
+		return selection;
+	}
+
+	public void setSelection(SimpleAttributeSet selection) {
+		this.selection = selection;
 	}
 	
 	public SimpleAttributeSet getRawText() {

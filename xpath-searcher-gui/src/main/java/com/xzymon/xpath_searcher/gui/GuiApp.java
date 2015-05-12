@@ -67,14 +67,14 @@ public class GuiApp extends JFrame{
 	private JTextPaneWrapper analysePane;
 
 	private JButton searchButton;
+	private JButton selectButton;
+	private JButton stainAgainButton;
 
 	private JTextField searchField;
 	
 	private final JFileChooser fileChooser = new JFileChooser();
 	private final XmlStylePalettesManager palettesManager = new XmlStylePalettesManager();
 	
-	private StainTextPaneHandler stainHandler = null;
-
 	public static void main(String[] args) {
 		try{
 			for(javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()){
@@ -142,6 +142,8 @@ public class GuiApp extends JFrame{
 		JLabel searchLabel = new JLabel("Phrase to search");
 		searchField = new JTextField(30);
 		searchButton = new JButton(new SearchAction());
+		selectButton = new JButton(new SelectAction());
+		stainAgainButton = new JButton(new StainAgainAction());
 		
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.gridx = 0;
@@ -153,10 +155,13 @@ public class GuiApp extends JFrame{
 		topPanel.add(searchField, gbc);
 		gbc.gridx = 2;
 		topPanel.add(searchButton, gbc);
+		gbc.gridx = 3;
+		topPanel.add(selectButton, gbc);
+		gbc.gridx = 4;
+		topPanel.add(stainAgainButton, gbc);
 		
-		analysePane = new JTextPaneWrapper(new DefaultStyledDocument());
-		analysePane.setLineWrap(false);
-		analysePane.setAutoscrolls(true);
+		analysePane = new JTextPaneWrapper();
+		analysePane.setPalette(palettesManager.getCurrentPalette());
 		centralPanel.add(new JScrollPane(analysePane));
 		
 		mainPanel.add(topPanel, BorderLayout.NORTH);
@@ -199,6 +204,7 @@ public class GuiApp extends JFrame{
 	}
 	
 	class CloseAction extends AbstractAction{
+		private static final long serialVersionUID = -2458760999790533135L;
 
 		public CloseAction(){
 			putValue(Action.NAME, "Close");
@@ -213,6 +219,7 @@ public class GuiApp extends JFrame{
 	}
 	
 	class SearchAction extends AbstractAction{
+		private static final long serialVersionUID = 1638709187169923458L;
 
 		public SearchAction(){
 			putValue(Action.NAME, "Search");
@@ -226,6 +233,7 @@ public class GuiApp extends JFrame{
 	}
 	
 	class OpenFileAction extends AbstractAction{
+		private static final long serialVersionUID = -7305718383597147777L;
 
 		public OpenFileAction(){
 			putValue(Action.NAME, "Open File");
@@ -242,57 +250,15 @@ public class GuiApp extends JFrame{
 				if(file.exists()){
 					if(file.canRead()){
 						InputStream is = null;
-						ByteArrayInputStream bs = null;
-						int avail = 0;
-						byte[] bytes = null;
-						String str = null;
 						try{
 							is = new FileInputStream(file);
-							avail = is.available();
-							if(avail>0){
-								bytes = new byte[avail];
-								is.read(bytes);
-								str = new String(bytes);
-								//
-								bs = new ByteArrayInputStream(bytes);
-								//StreamCutter cutter = new StreamCutter(bs, false);
-								//cutter.logReport();
-								ImprovedSlicer slicer = new ImprovedSlicer(bs);
-								//slicer.setProcessingHandler(new SimpleLoggingHandler());
-								analysePane.setDocument(new DefaultStyledDocument());
-								stainHandler = new StainTextPaneHandler(analysePane, palettesManager, slicer.getSavedStream());
-								slicer.setProcessingHandler(stainHandler);
-								List<SliceRepresentation> slices = slicer.slice();
-								slicer.useHandler();
-								/*
-								for(Slice slice: slices){
-									logger.info(slice.toString());
-								}
-								*/
-								logger.info("The number of slices is : " + slices.size());
-								//
-								//analysePane.setText(str);
-							}
+							analysePane.loadStream(is);
 						} catch (FileNotFoundException ex) {
 							logger.error(String.format("FileNotFoundException during: new FileInputStream(\"%1$s\")", file.getAbsolutePath()));
-						} catch (IOException ex) {
-							//logger.error(String.format("IOException during: new FileInputStream(\"%1$s\")", file.getAbsolutePath()));
-							ex.printStackTrace();
-						} catch (SlicingException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
 						} finally {
 							if(is!=null){
 								try{
 									is.close();
-								} catch(IOException ex){
-									ex.printStackTrace();
-								}
-							}
-							
-							if(bs!=null){
-								try{
-									bs.close();
 								} catch(IOException ex){
 									ex.printStackTrace();
 								}
@@ -310,6 +276,7 @@ public class GuiApp extends JFrame{
 	}
 	
 	class StainTextAction extends AbstractAction {
+		private static final long serialVersionUID = -8505725995016348710L;
 
 		public StainTextAction() {
 			putValue(Action.NAME, "Stain Text");
@@ -332,5 +299,31 @@ public class GuiApp extends JFrame{
 			//sdoc.setCharacterAttributes(0, 10, sas, false);
 		}
 		
+	}
+	
+	class SelectAction extends AbstractAction {
+		private static final long serialVersionUID = -4031390293576294826L;
+
+		public SelectAction(){
+			putValue(Action.NAME, "Select");
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			analysePane.selectText();
+		}
+	}
+	
+	class StainAgainAction extends AbstractAction {
+		private static final long serialVersionUID = -8592549398602437626L;
+
+		public StainAgainAction(){
+			putValue(Action.NAME, "Stain Again");
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			analysePane.stainAgain();
+		}
 	}
 }

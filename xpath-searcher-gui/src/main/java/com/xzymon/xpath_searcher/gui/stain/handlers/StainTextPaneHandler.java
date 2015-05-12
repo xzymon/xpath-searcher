@@ -4,16 +4,17 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.SimpleAttributeSet;
 
 import com.xzymon.xpath_searcher.gui.JTextPaneWrapper;
+import com.xzymon.xpath_searcher.gui.stain.XmlStylePalette;
 import com.xzymon.xpath_searcher.gui.stain.XmlStylePalettesManager;
 
 public class StainTextPaneHandler implements ProcessingHandler {
 	private JTextPaneWrapper textPaneWrapper;
-	private XmlStylePalettesManager palettesManager;
+	private XmlStylePalette palette;
 	private byte[] savedStream;
 	
-	public StainTextPaneHandler(JTextPaneWrapper paneWrapper, XmlStylePalettesManager palettesManager, byte[] documentChars){
+	public StainTextPaneHandler(JTextPaneWrapper paneWrapper, XmlStylePalette palette, byte[] documentChars){
 		this.textPaneWrapper = paneWrapper;
-		this.palettesManager = palettesManager;
+		this.palette = palette;
 		this.savedStream = documentChars;
 	}
 	
@@ -25,12 +26,12 @@ public class StainTextPaneHandler implements ProcessingHandler {
 		this.textPaneWrapper = textPaneWrapper;
 	}
 	
-	public XmlStylePalettesManager getPalettesManager() {
-		return palettesManager;
+	public XmlStylePalette getPalette() {
+		return palette;
 	}
 
-	public void setPalettesManager(XmlStylePalettesManager styleManager) {
-		this.palettesManager = styleManager;
+	public void setPalette(XmlStylePalette palette) {
+		this.palette = palette;
 	}
 	
 	public byte[] getSavedStream() {
@@ -44,7 +45,7 @@ public class StainTextPaneHandler implements ProcessingHandler {
 	@Override
 	public void otherTag(int startPos, int lastPos) {
 		String toInsert = new String(savedStream, startPos, lastPos-startPos+1);
-		SimpleAttributeSet sas = palettesManager.getCurrentPalette().getOther();
+		SimpleAttributeSet sas = palette.getOther();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {
@@ -56,7 +57,7 @@ public class StainTextPaneHandler implements ProcessingHandler {
 	@Override
 	public void lessThanStartChar(int position) {
 		String toInsert = new String(savedStream, position, 1);
-		SimpleAttributeSet sas = palettesManager.getCurrentPalette().getTagCasing();
+		SimpleAttributeSet sas = palette.getTagCasing();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {
@@ -68,7 +69,7 @@ public class StainTextPaneHandler implements ProcessingHandler {
 	@Override
 	public void tagName(int startPos, int lastPos) {
 		String toInsert = new String(savedStream, startPos, lastPos-startPos+1);
-		SimpleAttributeSet sas = palettesManager.getCurrentPalette().getTagName();
+		SimpleAttributeSet sas = palette.getTagName();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {
@@ -80,7 +81,7 @@ public class StainTextPaneHandler implements ProcessingHandler {
 	@Override
 	public void tagGap(int startPos, int lastPos) {
 		String toInsert = new String(savedStream, startPos, lastPos-startPos+1);
-		SimpleAttributeSet sas = palettesManager.getCurrentPalette().getTagGap();
+		SimpleAttributeSet sas = palette.getTagGap();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {
@@ -92,7 +93,7 @@ public class StainTextPaneHandler implements ProcessingHandler {
 	@Override
 	public void attributeName(int startPos, int lastPos) {
 		String toInsert = new String(savedStream, startPos, lastPos-startPos+1);
-		SimpleAttributeSet sas = palettesManager.getCurrentPalette().getAttributeName();
+		SimpleAttributeSet sas = palette.getAttributeName();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {
@@ -104,7 +105,7 @@ public class StainTextPaneHandler implements ProcessingHandler {
 	@Override
 	public void attributeEqualsSign(int position) {
 		String toInsert = new String(savedStream, position, 1);
-		SimpleAttributeSet sas = palettesManager.getCurrentPalette().getAttributeEqualsSign();
+		SimpleAttributeSet sas = palette.getAttributeEqualsSign();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {
@@ -116,7 +117,7 @@ public class StainTextPaneHandler implements ProcessingHandler {
 	@Override
 	public void attributeValue(int startPos, int lastPos) {
 		String toInsert = new String(savedStream, startPos, lastPos-startPos+1);
-		SimpleAttributeSet sas = palettesManager.getCurrentPalette().getAttributeValue();
+		SimpleAttributeSet sas = palette.getAttributeValue();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {
@@ -128,7 +129,7 @@ public class StainTextPaneHandler implements ProcessingHandler {
 	@Override
 	public void greaterThanEndingChar(int position) {
 		String toInsert = new String(savedStream, position, 1);
-		SimpleAttributeSet sas = palettesManager.getCurrentPalette().getTagCasing();
+		SimpleAttributeSet sas = palette.getTagCasing();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {
@@ -140,7 +141,7 @@ public class StainTextPaneHandler implements ProcessingHandler {
 	@Override
 	public void error(int startPos, int lastPos) {
 		String toInsert = new String(savedStream, startPos, lastPos-startPos+1);
-		SimpleAttributeSet sas = palettesManager.getCurrentPalette().getError();
+		SimpleAttributeSet sas = palette.getError();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {
@@ -152,7 +153,7 @@ public class StainTextPaneHandler implements ProcessingHandler {
 	@Override
 	public void closingSlash(int position) {
 		String toInsert = new String(savedStream, position, 1);
-		SimpleAttributeSet sas = palettesManager.getCurrentPalette().getClosingSlash();
+		SimpleAttributeSet sas = palette.getClosingSlash();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {
@@ -164,7 +165,7 @@ public class StainTextPaneHandler implements ProcessingHandler {
 	@Override
 	public void rawText(int startPos, int lastPos) {
 		String toInsert = new String(savedStream, startPos, lastPos-startPos+1);
-		SimpleAttributeSet sas = palettesManager.getCurrentPalette().getRawText();
+		SimpleAttributeSet sas = palette.getRawText();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {

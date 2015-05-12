@@ -41,3 +41,7 @@
 
 [v 0.0.5] [11-05-2015]
 + now text is colored when the file (XML-compliant) is loaded
+
+[v 0.0.6.alpha] [12-05-2015]
+& JTextPaneWrapper - has everything to stain text. Uses loadStream() method to load file
++ ImmutableXMLDocument - does not allow to modify Document content from keyboard
