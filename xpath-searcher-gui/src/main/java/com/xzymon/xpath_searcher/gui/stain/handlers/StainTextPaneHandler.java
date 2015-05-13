@@ -10,12 +10,12 @@ import com.xzymon.xpath_searcher.gui.stain.XmlStylePalettesManager;
 public class StainTextPaneHandler implements ProcessingHandler {
 	private JTextPaneWrapper textPaneWrapper;
 	private XmlStylePalette palette;
-	private byte[] savedStream;
+	private char[] savedChars;
 	
-	public StainTextPaneHandler(JTextPaneWrapper paneWrapper, XmlStylePalette palette, byte[] documentChars){
+	public StainTextPaneHandler(JTextPaneWrapper paneWrapper, XmlStylePalette palette, char[] documentChars){
 		this.textPaneWrapper = paneWrapper;
 		this.palette = palette;
-		this.savedStream = documentChars;
+		this.savedChars = documentChars;
 	}
 	
 	public JTextPaneWrapper getTextPaneWrapper() {
@@ -34,17 +34,17 @@ public class StainTextPaneHandler implements ProcessingHandler {
 		this.palette = palette;
 	}
 	
-	public byte[] getSavedStream() {
-		return savedStream;
+	public char[] getSavedChars() {
+		return savedChars;
 	}
 
-	public void setSavedStream(byte[] savedStream) {
-		this.savedStream = savedStream;
+	public void setSavedChars(char[] chars) {
+		this.savedChars = chars;
 	}
 
 	@Override
 	public void otherTag(int startPos, int lastPos) {
-		String toInsert = new String(savedStream, startPos, lastPos-startPos+1);
+		String toInsert = new String(savedChars, startPos, lastPos-startPos+1);
 		SimpleAttributeSet sas = palette.getOther();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
@@ -55,7 +55,7 @@ public class StainTextPaneHandler implements ProcessingHandler {
 
 	@Override
 	public void lessThanStartChar(int position) {
-		String toInsert = new String(savedStream, position, 1);
+		String toInsert = new String(savedChars, position, 1);
 		SimpleAttributeSet sas = palette.getTagCasing();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
@@ -66,7 +66,7 @@ public class StainTextPaneHandler implements ProcessingHandler {
 
 	@Override
 	public void tagName(int startPos, int lastPos) {
-		String toInsert = new String(savedStream, startPos, lastPos-startPos+1);
+		String toInsert = new String(savedChars, startPos, lastPos-startPos+1);
 		SimpleAttributeSet sas = palette.getTagName();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
@@ -77,7 +77,7 @@ public class StainTextPaneHandler implements ProcessingHandler {
 	
 	@Override
 	public void tagGap(int startPos, int lastPos) {
-		String toInsert = new String(savedStream, startPos, lastPos-startPos+1);
+		String toInsert = new String(savedChars, startPos, lastPos-startPos+1);
 		SimpleAttributeSet sas = palette.getTagGap();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
@@ -88,7 +88,7 @@ public class StainTextPaneHandler implements ProcessingHandler {
 
 	@Override
 	public void attributeName(int startPos, int lastPos) {
-		String toInsert = new String(savedStream, startPos, lastPos-startPos+1);
+		String toInsert = new String(savedChars, startPos, lastPos-startPos+1);
 		SimpleAttributeSet sas = palette.getAttributeName();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
@@ -99,7 +99,7 @@ public class StainTextPaneHandler implements ProcessingHandler {
 
 	@Override
 	public void attributeEqualsSign(int position) {
-		String toInsert = new String(savedStream, position, 1);
+		String toInsert = new String(savedChars, position, 1);
 		SimpleAttributeSet sas = palette.getAttributeEqualsSign();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
@@ -110,7 +110,7 @@ public class StainTextPaneHandler implements ProcessingHandler {
 
 	@Override
 	public void attributeValue(int startPos, int lastPos) {
-		String toInsert = new String(savedStream, startPos, lastPos-startPos+1);
+		String toInsert = new String(savedChars, startPos, lastPos-startPos+1);
 		SimpleAttributeSet sas = palette.getAttributeValue();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
@@ -121,7 +121,7 @@ public class StainTextPaneHandler implements ProcessingHandler {
 
 	@Override
 	public void greaterThanEndingChar(int position) {
-		String toInsert = new String(savedStream, position, 1);
+		String toInsert = new String(savedChars, position, 1);
 		SimpleAttributeSet sas = palette.getTagCasing();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
@@ -132,7 +132,7 @@ public class StainTextPaneHandler implements ProcessingHandler {
 
 	@Override
 	public void error(int startPos, int lastPos) {
-		String toInsert = new String(savedStream, startPos, lastPos-startPos+1);
+		String toInsert = new String(savedChars, startPos, lastPos-startPos+1);
 		SimpleAttributeSet sas = palette.getError();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
@@ -143,7 +143,7 @@ public class StainTextPaneHandler implements ProcessingHandler {
 	
 	@Override
 	public void closingSlash(int position) {
-		String toInsert = new String(savedStream, position, 1);
+		String toInsert = new String(savedChars, position, 1);
 		SimpleAttributeSet sas = palette.getClosingSlash();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
@@ -154,7 +154,7 @@ public class StainTextPaneHandler implements ProcessingHandler {
 
 	@Override
 	public void rawText(int startPos, int lastPos) {
-		String toInsert = new String(savedStream, startPos, lastPos-startPos+1);
+		String toInsert = new String(savedChars, startPos, lastPos-startPos+1);
 		SimpleAttributeSet sas = palette.getRawText();
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);

@@ -1,6 +1,5 @@
 package com.xzymon.xpath_searcher.gui;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 import javax.swing.JTextPane;
@@ -26,7 +25,6 @@ public class JTextPaneWrapper extends JTextPane {
 	private boolean wrapState = true;
 	private ImprovedSlicer slicer = null;
 	private ProcessingHandler slicingHandler = null;
-	private byte[] savedStream = null;
 	
 	private XmlStylePalette palette = null;
 	
@@ -44,22 +42,13 @@ public class JTextPaneWrapper extends JTextPane {
 	
 	public boolean loadStream(InputStream is) {
 		boolean result = false;
-		int avail;
 		try{
-			avail = is.available();
-			if(avail>0){
-				savedStream = new byte[avail];
-				is.read(savedStream);
-				
-				slicer = new ImprovedSlicer(savedStream);
-				newDocument();
-				slicingHandler = new StainTextPaneHandler(this, palette, slicer.getSavedStream());
-				slicer.setProcessingHandler(slicingHandler);
-				slicer.slice();
-				result = true;
-			}
-		} catch (IOException ex) {
-			ex.printStackTrace();
+			slicer = new ImprovedSlicer(is);
+			newDocument();
+			slicingHandler = new StainTextPaneHandler(this, palette, slicer.getSavedChars());
+			slicer.setProcessingHandler(slicingHandler);
+			slicer.slice();
+			result = true;
 		} catch (SlicingException e1) {
 			e1.printStackTrace();
 		} finally {
@@ -131,7 +120,13 @@ public class JTextPaneWrapper extends JTextPane {
 		int dot = caret.getDot();
 		int mark = caret.getMark();
 		int length = dot-mark;
-		String str = new String(savedStream, mark, length);
+		if(length<0){
+			int hlp = mark;
+			mark = dot;
+			dot = hlp;
+			length = -length;
+		}
+		String str = new String(slicer.getSavedChars(), mark, length);
 		try {
 			idoc.mutable();
 			idoc.remove(mark, length);

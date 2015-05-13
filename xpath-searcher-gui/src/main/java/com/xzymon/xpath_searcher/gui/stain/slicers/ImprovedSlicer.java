@@ -1,7 +1,9 @@
 package com.xzymon.xpath_searcher.gui.stain.slicers;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,7 +37,7 @@ import com.xzymon.xpath_searcher.gui.stain.handlers.control.WhitespaceControlPoi
 public class ImprovedSlicer {
 private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.class.getName());
 	
-	private byte[] savedStream = null;
+	private char[] savedChars = null;
 	private LinkedList<SlicerMode> modeList = null;
 	private LinkedList<ControlPoint> controlPoints;
 	
@@ -47,8 +49,14 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 		try{
 			int avail = is.available();
 			if(avail>0){
-				savedStream = new byte[avail];
+				byte[] savedStream = new byte[avail];
 				is.read(savedStream);
+				ByteArrayInputStream bais = new ByteArrayInputStream(savedStream);
+				InputStreamReader reader = new InputStreamReader(bais);
+				char[] charBuf = new char[savedStream.length];
+				int read = reader.read(charBuf);
+				savedChars = new char[read];
+				System.arraycopy(charBuf, 0, savedChars, 0, read);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -57,8 +65,17 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 		}
 	}
 	
-	public ImprovedSlicer(byte[] savedStream){
-		this.savedStream = savedStream;
+	public ImprovedSlicer(byte[] savedStream) throws IOException{
+		ByteArrayInputStream bais = new ByteArrayInputStream(savedStream);
+		InputStreamReader reader = new InputStreamReader(bais);
+		char[] charBuf = new char[savedStream.length];
+		int read = reader.read(charBuf);
+		savedChars = new char[read];
+		System.arraycopy(charBuf, 0, savedChars, 0, read);
+	}
+	
+	public ImprovedSlicer(char[] chars){
+		this.savedChars = chars;
 	}
 	
 	public void slice() throws SlicingException{
@@ -72,6 +89,7 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 		ErrorRepresentation error = null;
 		
 		int gapStart=-1, gapEnd=-1;
+		int slashPos;
 		
 		for(SliceRepresentation sliceR: slicesR){
 			logger.info(sliceR.toString());
@@ -107,7 +125,13 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 						gapStart = sInt.getEndPosition()+1;
 					}
 				}
+				//trzeba obsługiwać ewentualną przerwę przed znakiem/znakami kończącym 
 				if(sliceR.isSelfClosing()){
+					slashPos = sliceR.getClosingSlashPosition();
+					if(slashPos>gapStart){
+						handler.tagGap(gapStart, slashPos-1);
+						gapStart = slashPos+1;
+					}
 					handler.closingSlash(sliceR.getClosingSlashPosition());
 				}
 				handler.greaterThanEndingChar(sliceR.getEndPosition());
@@ -208,7 +232,7 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 						reinvoke=false;
 						switch(modeList.getLast()){
 						case NONE:
-							addMode(SlicerMode.INSIDE_DOUBLE_QUOTES);
+							//addMode(SlicerMode.INSIDE_DOUBLE_QUOTES);
 							break;
 						case INSIDE_SLICE:
 							addMode(SlicerMode.INSIDE_DOUBLE_QUOTES);
@@ -249,7 +273,7 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 						reinvoke=false;
 						switch(modeList.getLast()){
 						case NONE:
-							addMode(SlicerMode.INSIDE_SINGLE_QUOTES);
+							//addMode(SlicerMode.INSIDE_SINGLE_QUOTES);
 							break;
 						case INSIDE_SLICE:
 							addMode(SlicerMode.INSIDE_SINGLE_QUOTES);
@@ -435,8 +459,8 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 			}
 		}
 		// + ewentualny zamykający rawSlice
-		if(savedStream.length>0){
-			cp = new NoneControlPoint(savedStream.length-1);
+		if(savedChars.length>0){
+			cp = new NoneControlPoint(savedChars.length-1);
 			insertRawSlice(cp);
 		}
 		return slicesR;
@@ -447,9 +471,9 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 		char read_ch;
 		int pos=0;
 
-		if(savedStream != null){
-			while(pos<savedStream.length){
-				read_ch = (char)savedStream[pos];
+		if(savedChars != null){
+			while(pos<savedChars.length){
+				read_ch = savedChars[pos];
 				switch(read_ch){
 				case '<':
 					controlPoints.add(new LessThanControlPoint(pos));
@@ -514,12 +538,12 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 		}
 	}
 	
-	public byte[] getSavedStream() {
-		return savedStream;
+	public char[] getSavedChars() {
+		return savedChars;
 	}
 
-	public void setSavedStream(byte[] savedStream) {
-		this.savedStream = savedStream;
+	public void setSavedChars(char[] chars) {
+		this.savedChars = chars;
 	}
 
 	public ControlPoint getPreviousControlPointFrom(ControlPoint toFind){

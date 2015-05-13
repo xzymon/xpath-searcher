@@ -48,3 +48,6 @@
 
 [v 0.0.6.alpha2] [13-05-2015]
 \ Before changing the logic to use Reader instead of InputStream
+
+[v 0.0.6] [13-05-2015]
+Now ImprovedSlicer contains char[] instead of byte[] as data, but uses InputStream - not Reader

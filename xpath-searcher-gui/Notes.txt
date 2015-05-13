@@ -8,17 +8,9 @@ Poza tym posiada jeszcze pewne śmieci w kodzie (nadmiarowe, niepotrzebne zmienn
 Można by jeszcze upiększyć kod (poskracać, pododawać metody zamiast powtarzającego się kodu.
 Można by wywalić niepotrzebne klasy i w ten sposób uprościć organizację kodu
 
-PO PIERWSZE : przerobić wczytywanie pliku z InputStream na Reader (ok, jsoup potrzebuje String)
-	bo w tej chwili pojawia się rozsunięcie między tekstem wstawianym a usuwanym przy podmianie stylu
-	- prawdopodobnie z powodu że źródło jest tablicą bajtową, a Document pewnie używa char 
-
-
 CELE:
 wbudować coś przechowującego DOM we wrapper JTextPane
-OK		zrobić żeby wrapper JTextPane nie umożliwiał modyfikowania(dodawania, usuwania) tekstu z klawiatury 
-OK		 - choć ma umożliwiać zaznaczanie
-{OK}	wrapper ma mieć ładne API
-OK		przenieść kolorowanie do wrappera
+
 
 ->
 wrapper mógłby mieć podpinaną (wstrzykiwalną) konsolę do wpisywania poleceń i zwracania tekstowych komunikatów z wykonania poleceń
