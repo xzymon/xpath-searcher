@@ -494,13 +494,13 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 
 	private void insertRawSlice(ControlPoint cp){
 		// justAfterEnding is after previous Slice
-		int justAfterEnding = -1;
+		int justAfterEnding = 0;
 		// justBeforeBegining is before this Slice
 		int justBeforeBegining = -1;
 		SliceRepresentation rawSlice = null;
 		
 		justBeforeBegining = cp.getPosition()-1;
-		if(justAfterEnding<justBeforeBegining && justBeforeBegining>-1){
+		if(justAfterEnding<=justBeforeBegining && justBeforeBegining>-1){
 			if(slicesR.size()>0){
 				justAfterEnding=slicesR.getLast().getEndPosition()+1;
 			} 

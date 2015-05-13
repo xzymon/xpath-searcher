@@ -43,15 +43,15 @@ public class XmlStylePalettesManager {
 			partsDemand++;
 			styleNamePos++;
 		}
-		logger.info(String.format("parameters: length=%1$d, demand=%2$d", parameterParts.length, partsDemand));
+		logger.debug(String.format("parameters: length=%1$d, demand=%2$d", parameterParts.length, partsDemand));
 		if(parameterParts.length==partsDemand){
-			logger.info(String.format("parameters: prefix=%1$s", prefix));
+			logger.debug(String.format("parameters: prefix=%1$s", prefix));
 			if((parameterParts.length==4 && parameterParts[0].equals(prefix)) || parameterParts.length==3){
 				if(styles.containsKey(parameterParts[styleNamePos])){
-					//logger.info("contains");
+					logger.debug(String.format("Overriding style parameter: %1$s=%2$s", paramName, paramValue));
 					overriden = styles.get(parameterParts[styleNamePos]).overrideStyleByParameterShort(parameterParts, paramValue, styleNamePos);
 				} else {
-					//logger.info("adding");
+					logger.debug(String.format("Adding a new style triggered by parameter: %1$s=%2$s", paramName, paramValue));
 					XmlStylePalette style = new XmlStylePalette(parameterParts[styleNamePos]); 
 					styles.put(parameterParts[styleNamePos], style);
 					overriden = style.overrideStyleByParameterShort(parameterParts, paramValue, styleNamePos);

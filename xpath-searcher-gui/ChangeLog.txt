@@ -45,3 +45,6 @@
 [v 0.0.6.alpha] [12-05-2015]
 & JTextPaneWrapper - has everything to stain text. Uses loadStream() method to load file
 + ImmutableXMLDocument - does not allow to modify Document content from keyboard
+
+[v 0.0.6.alpha2] [13-05-2015]
+\ Before changing the logic to use Reader instead of InputStream

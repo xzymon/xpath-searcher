@@ -49,7 +49,6 @@ public class StainTextPaneHandler implements ProcessingHandler {
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -61,7 +60,6 @@ public class StainTextPaneHandler implements ProcessingHandler {
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -73,7 +71,6 @@ public class StainTextPaneHandler implements ProcessingHandler {
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -85,7 +82,6 @@ public class StainTextPaneHandler implements ProcessingHandler {
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -97,7 +93,6 @@ public class StainTextPaneHandler implements ProcessingHandler {
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -109,7 +104,6 @@ public class StainTextPaneHandler implements ProcessingHandler {
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -121,7 +115,6 @@ public class StainTextPaneHandler implements ProcessingHandler {
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -133,7 +126,6 @@ public class StainTextPaneHandler implements ProcessingHandler {
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -145,7 +137,6 @@ public class StainTextPaneHandler implements ProcessingHandler {
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -157,7 +148,6 @@ public class StainTextPaneHandler implements ProcessingHandler {
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -169,7 +159,6 @@ public class StainTextPaneHandler implements ProcessingHandler {
 		try {
 			textPaneWrapper.appendStyledString(toInsert, sas);
 		} catch (BadLocationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

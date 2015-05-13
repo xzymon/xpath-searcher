@@ -39,7 +39,7 @@ public class JTextPaneWrapper extends JTextPane {
 	private void init(){
 		setLineWrap(false);
 		setAutoscrolls(true);
-		((ImmutableXMLDocument)this.getStyledDocument()).immutable();
+		getImmutableXMLDocument().immutable();
 	}
 	
 	public boolean loadStream(InputStream is) {
@@ -59,10 +59,8 @@ public class JTextPaneWrapper extends JTextPane {
 				result = true;
 			}
 		} catch (IOException ex) {
-			//logger.error(String.format("IOException during: new FileInputStream(\"%1$s\")", file.getAbsolutePath()));
 			ex.printStackTrace();
 		} catch (SlicingException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		} finally {
 			
@@ -70,6 +68,11 @@ public class JTextPaneWrapper extends JTextPane {
 		return result;
 	}
 	
+	/*
+	 * Akceptuje tylko ImmutableXMLDocument
+	 * (non-Javadoc)
+	 * @see javax.swing.JTextPane#setStyledDocument(javax.swing.text.StyledDocument)
+	 */
 	@Override
 	public void setStyledDocument(StyledDocument doc) {
 		if(doc!=null && doc instanceof ImmutableXMLDocument){
@@ -77,6 +80,10 @@ public class JTextPaneWrapper extends JTextPane {
 		} else {
 			logger.info("invalid document type - not instance of ImmutableXMLDocument");
 		}
+	}
+	
+	private ImmutableXMLDocument getImmutableXMLDocument(){
+		return (ImmutableXMLDocument)this.getStyledDocument();
 	}
 	
 	public void newDocument(){
@@ -104,10 +111,10 @@ public class JTextPaneWrapper extends JTextPane {
 	}
 
 	public void appendStyledString(String str, SimpleAttributeSet sas) throws BadLocationException {
-		((ImmutableXMLDocument)this.getStyledDocument()).mutable();
+		getImmutableXMLDocument().mutable();
 		StyledDocument document = (StyledDocument) getDocument();
 		document.insertString(document.getLength(), str, sas);
-		((ImmutableXMLDocument)this.getStyledDocument()).immutable();
+		getImmutableXMLDocument().immutable();
 	}
 	
 	public void stainAgain(){
@@ -116,7 +123,7 @@ public class JTextPaneWrapper extends JTextPane {
 	}
 
 	public void selectText(){
-		ImmutableXMLDocument idoc = (ImmutableXMLDocument)getStyledDocument();
+		ImmutableXMLDocument idoc = getImmutableXMLDocument();
 		Caret caret = this.getCaret();
 		
 		//caret.setDot(dot);

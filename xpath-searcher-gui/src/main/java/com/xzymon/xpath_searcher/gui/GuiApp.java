@@ -196,7 +196,7 @@ public class GuiApp extends JFrame{
 				strValue = props.get(key).toString();
 				logger.info(String.format("Loaded property: %1$s=%2$s", strKey, strValue));
 				palettesManager.overrideStyleByParameter(strKey, strValue);
-				logger.info("Manager : " + managerAdded);
+				logger.debug("Manager : " + managerAdded);
 			}
 		}
 		

@@ -195,12 +195,7 @@ public class XmlStylePalette {
 		boolean overriden = false;
 		String[] parameterParts = paramName.split("\\.");
 		int partsDemand = 3;
-		Integer intValue = null;
-		Boolean boolValue = null;
-		Color colorValue = null;
-		Object value = null;
 		int styleNamePos = 0;
-		SimpleAttributeSet sas = null;
 		if(parameterAllStylesPrefix!=null){
 			partsDemand++;
 			styleNamePos++;
@@ -208,45 +203,7 @@ public class XmlStylePalette {
 		if(parameterParts.length==partsDemand){
 			if((parameterParts.length==4 && parameterParts[0].equals(parameterAllStylesPrefix)) || parameterParts.length==3){
 				if(parameterParts[styleNamePos].equals(name)){
-					if(styledElements.containsKey(parameterParts[styleNamePos+1]) && styledAttributes.containsKey(parameterParts[styleNamePos+2])){
-						sas = styledElements.get(parameterParts[styleNamePos+1]);
-						String type = styledAttributesTypes.get(styledAttributes.get(parameterParts[styleNamePos+2])).getCanonicalName();
-						switch(type){
-						case "java.awt.Color":
-							if(paramValue!=null){
-								try{
-									intValue = Integer.parseInt(paramValue, 16);
-									colorValue = new Color(intValue);
-									value = colorValue;
-								} catch (NumberFormatException ex){
-									
-								}
-							}
-							break;
-						case "java.lang.Integer":
-							if(paramValue!=null){
-								try{
-									intValue = Integer.parseInt(paramValue, 10);
-									value = intValue;
-								} catch (NumberFormatException ex){
-									
-								}
-							}
-							break;
-						case "java.lang.Boolean":
-							if(paramValue!=null){
-								boolValue = Boolean.parseBoolean(paramValue);
-								value = boolValue;
-							}
-							break;
-						}
-						if(value!=null){
-							logger.info(String.format("for style %3$s: replacing value of %1$s to %2$s", paramName, value.toString(), name));
-							sas.removeAttribute(parameterParts[styleNamePos+2]);
-							sas.addAttribute(styledAttributes.get(parameterParts[styleNamePos+2]), value);
-							overriden = true;
-						}
-					}
+					overriden = overrideStyleByParameterShort(parameterParts, paramValue, styleNamePos);
 				}
 			}
 		}
@@ -260,11 +217,11 @@ public class XmlStylePalette {
 		Color colorValue = null;
 		Object value = null;
 		SimpleAttributeSet sas = null;
-		//logger.info(String.format("Testing: styledElements <-> %1$s | styledAttributes <-> %2$s", parameterParts[styleNamePos+1], parameterParts[styleNamePos+2]));
+		logger.debug(String.format("Testing: styledElements <-> %1$s | styledAttributes <-> %2$s", parameterParts[styleNamePos+1], parameterParts[styleNamePos+2]));
 		if(styledElements.containsKey(parameterParts[styleNamePos+1]) && styledAttributes.containsKey(parameterParts[styleNamePos+2])){
 			sas = styledElements.get(parameterParts[styleNamePos+1]);
 			String type = styledAttributesTypes.get(styledAttributes.get(parameterParts[styleNamePos+2])).getCanonicalName();
-			//logger.info(String.format("style : %1$s", type));
+			logger.debug(String.format("style : %1$s", type));
 			switch(type){
 			case "java.awt.Color":
 				if(paramValue!=null){
@@ -272,7 +229,6 @@ public class XmlStylePalette {
 						intValue = Integer.parseInt(paramValue, 16);
 						colorValue = new Color(intValue);
 						value = colorValue;
-						//logger.info("color");
 					} catch (NumberFormatException ex){
 					
 					}
@@ -283,7 +239,6 @@ public class XmlStylePalette {
 					try{
 						intValue = Integer.parseInt(paramValue, 10);
 						value = intValue;
-						//logger.info("integer");
 					} catch (NumberFormatException ex){
 					
 					}
@@ -293,7 +248,6 @@ public class XmlStylePalette {
 				if(paramValue!=null){
 					boolValue = Boolean.parseBoolean(paramValue);
 					value = boolValue;
-					//logger.info("boolean");
 				}
 				break;
 			}
