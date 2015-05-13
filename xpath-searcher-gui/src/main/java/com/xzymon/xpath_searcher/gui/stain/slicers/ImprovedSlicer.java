@@ -150,7 +150,7 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 		boolean reinvoke = false;
 		boolean dropAttr = false;
 		
-		addMode(SlicerMode.NONE);
+		modeList.addLast(SlicerMode.NONE);
 				
 		//findControlPoints();
 		int cplength = controlPoints.size();
@@ -175,12 +175,12 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 					curSlice = new SliceRepresentation();
 					curSlice.setStartPosition(cp.getPosition());
 					slicesR.addLast(curSlice);
-					addMode(SlicerMode.INSIDE_SLICE);
+					modeList.addLast(SlicerMode.INSIDE_SLICE);
 					break;
 				case INSIDE_SLICE:
 					curError = new ErrorRepresentation();
 					curError.setStartPosition(cp.getPosition());
-					addMode(SlicerMode.ERROR);
+					modeList.addLast(SlicerMode.ERROR);
 					break;
 				default:
 					break;	
@@ -232,10 +232,10 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 						reinvoke=false;
 						switch(modeList.getLast()){
 						case NONE:
-							//addMode(SlicerMode.INSIDE_DOUBLE_QUOTES);
+							//modeList.addLast(SlicerMode.INSIDE_DOUBLE_QUOTES);
 							break;
 						case INSIDE_SLICE:
-							addMode(SlicerMode.INSIDE_DOUBLE_QUOTES);
+							modeList.addLast(SlicerMode.INSIDE_DOUBLE_QUOTES);
 							break;
 						case INSIDE_DOUBLE_QUOTES:
 							// wycofaj tryb
@@ -255,7 +255,7 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 								dropAttr = false;
 							} else {
 								if(pre_cp!=null && pre_cp.getChar()=='=' && pre_cp.getPosition()==cp.getPosition()-1){
-									addMode(SlicerMode.INSIDE_DOUBLE_QUOTES);
+									modeList.addLast(SlicerMode.INSIDE_DOUBLE_QUOTES);
 									curAttr.setDoubleQuoted(true);
 									curAttr.setStartQuotationMarkAt(cp.getPosition());
 								}
@@ -273,10 +273,10 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 						reinvoke=false;
 						switch(modeList.getLast()){
 						case NONE:
-							//addMode(SlicerMode.INSIDE_SINGLE_QUOTES);
+							//modeList.addLast(SlicerMode.INSIDE_SINGLE_QUOTES);
 							break;
 						case INSIDE_SLICE:
-							addMode(SlicerMode.INSIDE_SINGLE_QUOTES);
+							modeList.addLast(SlicerMode.INSIDE_SINGLE_QUOTES);
 							break;
 						case INSIDE_SINGLE_QUOTES:
 							// wycofaj tryb
@@ -296,7 +296,7 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 								dropAttr = false;
 							} else {
 								if(pre_cp!=null && pre_cp.getChar()=='=' && pre_cp.getPosition()==cp.getPosition()-1){
-									addMode(SlicerMode.INSIDE_DOUBLE_QUOTES);
+									modeList.addLast(SlicerMode.INSIDE_DOUBLE_QUOTES);
 									curAttr.setSingleQuoted(true);
 									curAttr.setStartQuotationMarkAt(cp.getPosition());
 								}
@@ -344,7 +344,7 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 					// jeśli poprzedni znak na liście jest whitespace i nie jest bezpośrednio poprzedni to  włącz tryb INSIDE_ATTRIBUTE
 					if(modeList.getLast().equals(SlicerMode.INSIDE_SLICE)){
 						if(pre_cp!=null && pre_cp instanceof WhitespaceControlPoint && pre_cp.getPosition()<cp.getPosition()-1){
-							addMode(SlicerMode.INSIDE_ATTRIBUTE);
+							modeList.addLast(SlicerMode.INSIDE_ATTRIBUTE);
 							curAttr = new AttributeRepresentation();
 							curAttr.setStartsAt(pre_cp.getPosition()+1);
 							curAttr.setNameEndsAt(cp.getPosition()-1);
@@ -423,7 +423,7 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 							curAttr = null;
 							curSlice.addError(curError);
 							curSlice.addInterior(curError);
-							addMode(SlicerMode.ERROR);
+							modeList.addLast(SlicerMode.ERROR);
 							reinvoke = true;
 							break;
 						// ma znaczenie dla deklaracji XML lub kodu php - gdy poprzedza go <
@@ -565,25 +565,12 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 		this.handler = handler;
 	}
 	
-	public ControlPoint registerRegain(int pos, char ch){
-		ControlPoint cp = null;
-		return cp;
-	}
-
 	public ControlPoint regainError(ControlPoint cp, ErrorRepresentation curError, SliceRepresentation curSlice){
 		logger.info(String.format("regaining error at %1$d on char=%2$d ['%3$s']", cp.getPosition(), (int)cp.getChar(), cp.getChar()));
 		curError.setEndPosition(cp.getPosition()-1);
 		curSlice.addError(curError);
 		curSlice.addInterior(curError);
 		return cp;
-	}
-	
-	public void addMode(SlicerMode mode){
-		modeList.addLast(mode);
-	}
-	
-	public LinkedList<ControlPoint> getControlPointsList() {
-		return controlPoints;
 	}
 	
 	public void logReport(){

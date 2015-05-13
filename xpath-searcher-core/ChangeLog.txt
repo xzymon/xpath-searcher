@@ -1,0 +1,2 @@
+[v 0.0.1-SNAPSHOT] [13-05-2015]
++ XPathEngineWrapper - to manage XPath searching 

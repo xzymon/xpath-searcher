@@ -1,0 +1,2 @@
+Engine realizuje wyszukiwanie XPath. 
+Trzeba zaimplementować jeszcze inne metody (jak dla konsoli).

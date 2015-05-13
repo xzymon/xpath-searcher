@@ -98,6 +98,10 @@ public class JTextPaneWrapper extends JTextPane {
 	public void setPalette(XmlStylePalette palette) {
 		this.palette = palette;
 	}
+	
+	public ImprovedSlicer getSlicer(){
+		return this.slicer;
+	}
 
 	public void appendStyledString(String str, SimpleAttributeSet sas) throws BadLocationException {
 		getImmutableXMLDocument().mutable();

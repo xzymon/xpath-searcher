@@ -42,6 +42,7 @@ import javax.swing.text.StyledDocument;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import javax.xml.xpath.XPathExpressionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,6 +50,8 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
+import com.xzymon.xpath_searcher.core.Finder;
+import com.xzymon.xpath_searcher.core.XPathEngineWrapper;
 import com.xzymon.xpath_searcher.gui.stain.XmlStylePalettesManager;
 import com.xzymon.xpath_searcher.gui.stain.exceptions.SlicingException;
 import com.xzymon.xpath_searcher.gui.stain.handlers.SimpleLoggingHandler;
@@ -72,6 +75,8 @@ public class GuiApp extends JFrame{
 	private JButton stainAgainButton;
 
 	private JTextField searchField;
+	
+	private XPathEngineWrapper engine = null;
 	
 	private final JFileChooser fileChooser = new JFileChooser();
 	private final XmlStylePalettesManager palettesManager = new XmlStylePalettesManager();
@@ -228,7 +233,13 @@ public class GuiApp extends JFrame{
 		
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			logger.info(String.format("Invoked for search phrase: %1$s", searchField.getText()));
+			String phrase = searchField.getText();
+			logger.info(String.format("Invoked for search phrase: %1$s", phrase));
+			try {
+				engine.find(phrase);
+			} catch (XPathExpressionException e1) {
+				e1.printStackTrace();
+			}
 		}
 		
 	}
@@ -254,6 +265,7 @@ public class GuiApp extends JFrame{
 						try{
 							is = new FileInputStream(file);
 							analysePane.loadStream(is);
+							engine = new XPathEngineWrapper(new String(analysePane.getSlicer().getSavedChars()));
 						} catch (FileNotFoundException ex) {
 							logger.error(String.format("FileNotFoundException during: new FileInputStream(\"%1$s\")", file.getAbsolutePath()));
 						} finally {

@@ -15,6 +15,10 @@ wbudować coś przechowującego DOM we wrapper JTextPane
 ->
 wrapper mógłby mieć podpinaną (wstrzykiwalną) konsolę do wpisywania poleceń i zwracania tekstowych komunikatów z wykonania poleceń
 niech też reaguje na \t wyświetlając dostępne polecenia
+
+Konsola wykorzystuje wzorzec Command do wykonywania poleceń w konsoli.
+Konsola stosuje filtr by edycja była możliwa tylko po znaku zachęty
+
  * Obsługiwane polecenia * [znak zachęty] = poprzedzający $
    $ find <wzorzec> -> znajduje wzorzec (przeprowadza ewaluację i podświetla wszystkie wystąpienia w dokumencie)
    $ find --iterate <wzorzec> -> kompiluje wzorzec, oblicza ilość spełniających elementów, zwraca komunikat o ilości wykrytych elementów - i jeżeli >0 to oczekuje na "next" do podświetlenia kolejnego elementu lub "exit" do przerwania iteracji
