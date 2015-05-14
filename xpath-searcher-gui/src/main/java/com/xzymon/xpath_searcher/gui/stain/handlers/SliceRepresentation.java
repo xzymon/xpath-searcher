@@ -70,6 +70,10 @@ public class SliceRepresentation {
 		this.raw = raw;
 	}
 	
+	public boolean isOpening(){
+		return !raw && !other && !isClosing();
+	}
+	
 	public List<AttributeRepresentation> getAttributes() {
 		return attributes;
 	}

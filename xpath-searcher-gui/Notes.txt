@@ -10,7 +10,8 @@ Można by wywalić niepotrzebne klasy i w ten sposób uprościć organizację ko
 
 CELE:
 wbudować coś przechowującego DOM we wrapper JTextPane
-
+-> Mapa przechowująca mapowania Node->[zakres]
+-> po zbudowaniu Dokumentu iteracja po Nodach i równolegle po Slice'ach i budowa mapy powiązań
 
 ->
 wrapper mógłby mieć podpinaną (wstrzykiwalną) konsolę do wpisywania poleceń i zwracania tekstowych komunikatów z wykonania poleceń

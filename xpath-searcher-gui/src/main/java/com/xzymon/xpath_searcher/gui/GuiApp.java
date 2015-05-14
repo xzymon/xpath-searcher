@@ -7,22 +7,18 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Reader;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JButton;
-import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -31,33 +27,24 @@ import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.text.BadLocationException;
-import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
 import javax.xml.xpath.XPathExpressionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
-import com.xzymon.xpath_searcher.core.Finder;
 import com.xzymon.xpath_searcher.core.XPathEngineWrapper;
+import com.xzymon.xpath_searcher.gui.JTextPaneWrapper;
 import com.xzymon.xpath_searcher.gui.stain.XmlStylePalettesManager;
-import com.xzymon.xpath_searcher.gui.stain.exceptions.SlicingException;
-import com.xzymon.xpath_searcher.gui.stain.handlers.SimpleLoggingHandler;
-import com.xzymon.xpath_searcher.gui.stain.handlers.SliceRepresentation;
-import com.xzymon.xpath_searcher.gui.stain.handlers.StainTextPaneHandler;
-import com.xzymon.xpath_searcher.gui.stain.slicers.ImprovedSlicer;
+import com.xzymon.xpath_searcher.gui.stain.exceptions.BuildingNodeStructureException;
+import com.xzymon.xpath_searcher.gui.stain.structure.SlicedNode;
 
 public class GuiApp extends JFrame{
 	private static final long serialVersionUID = 3219548713775085362L;
@@ -77,6 +64,7 @@ public class GuiApp extends JFrame{
 	private JTextField searchField;
 	
 	private XPathEngineWrapper engine = null;
+	private Map<Node, SlicedNode> bindingMap = null;
 	
 	private final JFileChooser fileChooser = new JFileChooser();
 	private final XmlStylePalettesManager palettesManager = new XmlStylePalettesManager();
@@ -209,6 +197,35 @@ public class GuiApp extends JFrame{
 		return props;
 	}
 	
+	private void bindElementsToText(){
+		Node xPathNode = null;
+		SlicedNode slicedNode = null;
+		bindingMap = new HashMap<Node, SlicedNode>();
+		try {
+			NodeList nodeList = engine.find("//*");
+			SlicedNode rootSlicedNode = analysePane.getSlicer().buildStructure();
+			SlicedNode.SlicedNodeIterator snIt = rootSlicedNode.iterator();
+			for(int nodeLoop=0; nodeLoop<nodeList.getLength(); nodeLoop++){
+				xPathNode = nodeList.item(nodeLoop);
+				if(snIt.hasNext()){
+					slicedNode = snIt.next();
+					logger.info(String.format("parallel nodes: xpath=%2$s(%1$d), sliced=%3$s", nodeLoop, xPathNode.getNodeName(), slicedNode.getName()));
+					if(xPathNode.getNodeName().equals(slicedNode.getName())){
+						bindingMap.put(xPathNode, slicedNode);
+					} else {
+						logger.info(String.format("names NOT EQUAL: xpath=%2$s(%1$d), sliced=%3$s", nodeLoop, xPathNode.getNodeName(), slicedNode.getName()));
+					}
+				}
+			}
+		} catch (XPathExpressionException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (BuildingNodeStructureException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	class CloseAction extends AbstractAction{
 		private static final long serialVersionUID = -2458760999790533135L;
 
@@ -266,6 +283,7 @@ public class GuiApp extends JFrame{
 							is = new FileInputStream(file);
 							analysePane.loadStream(is);
 							engine = new XPathEngineWrapper(new String(analysePane.getSlicer().getSavedChars()));
+							bindElementsToText();
 						} catch (FileNotFoundException ex) {
 							logger.error(String.format("FileNotFoundException during: new FileInputStream(\"%1$s\")", file.getAbsolutePath()));
 						} finally {

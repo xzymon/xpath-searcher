@@ -56,7 +56,7 @@ public class XPathEngineWrapper {
 		}
 	}
 	
-	public void find(String expression) throws XPathExpressionException{
+	public NodeList find(String expression) throws XPathExpressionException{
 		XPath xPath = XPathFactory.newInstance().newXPath();
 		//String expression = "/Employees/Employee[@emplid='3333']/email";
 		Node node = null;
@@ -67,5 +67,6 @@ public class XPathEngineWrapper {
 			node = nodeList.item(in);
 			handler.nodeFound(node);
 		}
+		return nodeList;
 	}
 }

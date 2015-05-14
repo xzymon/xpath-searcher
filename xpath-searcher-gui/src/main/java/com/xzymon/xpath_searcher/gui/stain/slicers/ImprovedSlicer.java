@@ -12,6 +12,7 @@ import java.util.ListIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.xzymon.xpath_searcher.gui.stain.exceptions.BuildingNodeStructureException;
 import com.xzymon.xpath_searcher.gui.stain.exceptions.InvalidCharacterException;
 import com.xzymon.xpath_searcher.gui.stain.exceptions.SlicingException;
 import com.xzymon.xpath_searcher.gui.stain.handlers.AttributeRepresentation;
@@ -33,6 +34,7 @@ import com.xzymon.xpath_searcher.gui.stain.handlers.control.QuestionMarkControlP
 import com.xzymon.xpath_searcher.gui.stain.handlers.control.SingleQuoteControlPoint;
 import com.xzymon.xpath_searcher.gui.stain.handlers.control.SlashSignControlPoint;
 import com.xzymon.xpath_searcher.gui.stain.handlers.control.WhitespaceControlPoint;
+import com.xzymon.xpath_searcher.gui.stain.structure.SlicedNode;
 
 public class ImprovedSlicer {
 private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.class.getName());
@@ -137,6 +139,10 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 				handler.greaterThanEndingChar(sliceR.getEndPosition());
 			}
 		}
+	}
+	
+	public SlicedNode buildStructure() throws BuildingNodeStructureException{
+		return SlicedNode.buildStructure(slicesR, savedChars);
 	}
 	
 	private List<SliceRepresentation> getSlices() throws SlicingException{
