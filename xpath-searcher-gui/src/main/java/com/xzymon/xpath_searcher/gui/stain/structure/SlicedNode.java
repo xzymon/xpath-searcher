@@ -199,8 +199,12 @@ public class SlicedNode {
 							nextNode = null;
 							break;
 						}
-					} while(!listIt.hasNext()); 
-					nextNode = listIt.next();
+					} while(!listIt.hasNext());
+					if(listIt.hasNext()){
+						nextNode = listIt.next();
+					} else {
+						nextNode = null;
+					}
 				}
 			}
 			return result;

@@ -41,9 +41,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.xzymon.xpath_searcher.core.XPathEngineWrapper;
-import com.xzymon.xpath_searcher.gui.JTextPaneWrapper;
 import com.xzymon.xpath_searcher.gui.stain.XmlStylePalettesManager;
 import com.xzymon.xpath_searcher.gui.stain.exceptions.BuildingNodeStructureException;
+import com.xzymon.xpath_searcher.gui.stain.handlers.SliceRepresentation;
 import com.xzymon.xpath_searcher.gui.stain.structure.SlicedNode;
 
 public class GuiApp extends JFrame{
@@ -57,6 +57,8 @@ public class GuiApp extends JFrame{
 	private JPanel mainPanel, topPanel, centralPanel;
 	private JTextPaneWrapper analysePane;
 
+	private SearchAction searchAction;
+	private SelectAction selectAction;
 	private JButton searchButton;
 	private JButton selectButton;
 	private JButton stainAgainButton;
@@ -135,8 +137,10 @@ public class GuiApp extends JFrame{
 		
 		JLabel searchLabel = new JLabel("Phrase to search");
 		searchField = new JTextField(30);
-		searchButton = new JButton(new SearchAction());
-		selectButton = new JButton(new SelectAction());
+		searchAction = new SearchAction();
+		searchButton = new JButton(searchAction);
+		selectAction = new SelectAction();
+		selectButton = new JButton(selectAction);
 		stainAgainButton = new JButton(new StainAgainAction());
 		
 		GridBagConstraints gbc = new GridBagConstraints();
@@ -202,7 +206,7 @@ public class GuiApp extends JFrame{
 		SlicedNode slicedNode = null;
 		bindingMap = new HashMap<Node, SlicedNode>();
 		try {
-			NodeList nodeList = engine.find("//*");
+			NodeList nodeList = engine.findNodes("//*");
 			SlicedNode rootSlicedNode = analysePane.getSlicer().buildStructure();
 			SlicedNode.SlicedNodeIterator snIt = rootSlicedNode.iterator();
 			for(int nodeLoop=0; nodeLoop<nodeList.getLength(); nodeLoop++){
@@ -243,22 +247,38 @@ public class GuiApp extends JFrame{
 	
 	class SearchAction extends AbstractAction{
 		private static final long serialVersionUID = 1638709187169923458L;
-
+		private XPathEngineWrapper engine;
+		
 		public SearchAction(){
 			putValue(Action.NAME, "Search");
 		}
 		
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			String phrase = searchField.getText();
-			logger.info(String.format("Invoked for search phrase: %1$s", phrase));
-			try {
-				engine.find(phrase);
-			} catch (XPathExpressionException e1) {
-				e1.printStackTrace();
-			}
+		public void setEngine(XPathEngineWrapper engine){
+			this.engine = engine;
 		}
 		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			SlicedNode snode = null;
+			SliceRepresentation srep = null;
+			String phrase = searchField.getText();
+			logger.info(String.format("Invoked for search phrase: %1$s", phrase));
+			stainAgain();
+			if(engine!=null){
+				try {
+					NodeList list = engine.findNodes(phrase);
+					for(int nloop=0; nloop<list.getLength(); nloop++){
+						snode = bindingMap.get(list.item(nloop));
+						srep = snode.getOpeningSlice();
+						analysePane.setSelectionStart(srep.getNameStartPosition());
+						analysePane.setSelectionEnd(srep.getNameEndPosition()+1);
+						selectText();
+					}
+				} catch (XPathExpressionException e1) {
+					e1.printStackTrace();
+				}
+			}
+		}		
 	}
 	
 	class OpenFileAction extends AbstractAction{
@@ -283,6 +303,7 @@ public class GuiApp extends JFrame{
 							is = new FileInputStream(file);
 							analysePane.loadStream(is);
 							engine = new XPathEngineWrapper(new String(analysePane.getSlicer().getSavedChars()));
+							searchAction.setEngine(engine);
 							bindElementsToText();
 						} catch (FileNotFoundException ex) {
 							logger.error(String.format("FileNotFoundException during: new FileInputStream(\"%1$s\")", file.getAbsolutePath()));
@@ -341,8 +362,12 @@ public class GuiApp extends JFrame{
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			analysePane.selectText();
+			selectText();
 		}
+	}
+	
+	public void selectText(){
+		analysePane.selectText();
 	}
 	
 	class StainAgainAction extends AbstractAction {
@@ -354,7 +379,11 @@ public class GuiApp extends JFrame{
 
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			analysePane.stainAgain();
+			stainAgain();
 		}
+	}
+	
+	public void stainAgain(){
+		analysePane.stainAgain();
 	}
 }

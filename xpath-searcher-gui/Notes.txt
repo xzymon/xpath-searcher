@@ -9,10 +9,6 @@ Można by jeszcze upiększyć kod (poskracać, pododawać metody zamiast powtarz
 Można by wywalić niepotrzebne klasy i w ten sposób uprościć organizację kodu
 
 CELE:
-wbudować coś przechowującego DOM we wrapper JTextPane
--> Mapa przechowująca mapowania Node->[zakres]
--> po zbudowaniu Dokumentu iteracja po Nodach i równolegle po Slice'ach i budowa mapy powiązań
-
 ->
 wrapper mógłby mieć podpinaną (wstrzykiwalną) konsolę do wpisywania poleceń i zwracania tekstowych komunikatów z wykonania poleceń
 niech też reaguje na \t wyświetlając dostępne polecenia

@@ -5,7 +5,6 @@ import javax.swing.text.SimpleAttributeSet;
 
 import com.xzymon.xpath_searcher.gui.JTextPaneWrapper;
 import com.xzymon.xpath_searcher.gui.stain.XmlStylePalette;
-import com.xzymon.xpath_searcher.gui.stain.XmlStylePalettesManager;
 
 public class StainTextPaneHandler implements ProcessingHandler {
 	private JTextPaneWrapper textPaneWrapper;

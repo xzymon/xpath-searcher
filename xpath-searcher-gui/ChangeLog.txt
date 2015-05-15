@@ -54,3 +54,7 @@ Now ImprovedSlicer contains char[] instead of byte[] as data, but uses InputStre
 
 [v 0.0.7.alpha1] [14-05-2015]
 \ binding xpath to gui model
+
+[v 0.0.7] [15-05-2015]
++ xpath nodes bound to gui model (using map)
++ any found node is stained while searching by XPath expression
