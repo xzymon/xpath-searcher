@@ -16,11 +16,11 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-public class XPathEngineWrapper {
+public class XPathProcessor {
 	private Document xmlDocument = null;
 	private XPathProcessingHandler handler = null;
 	
-	public XPathEngineWrapper(String xmlString){
+	public XPathProcessor(String xmlString){
 		this.handler = new StandardHandler();
 		init(xmlString);
 	}

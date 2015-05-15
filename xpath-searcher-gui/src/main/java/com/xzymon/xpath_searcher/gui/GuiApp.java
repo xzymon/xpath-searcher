@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.xzymon.xpath_searcher.core.XPathEngineWrapper;
+import com.xzymon.xpath_searcher.core.XPathProcessor;
 import com.xzymon.xpath_searcher.gui.stain.XmlStylePalettesManager;
 import com.xzymon.xpath_searcher.gui.stain.exceptions.BuildingNodeStructureException;
 import com.xzymon.xpath_searcher.gui.stain.handlers.SliceRepresentation;
@@ -71,7 +71,7 @@ public class GuiApp extends JFrame{
 
 	private JTextField searchField;
 	
-	private XPathEngineWrapper engine = null;
+	private XPathProcessor engine = null;
 	private Map<Node, SlicedNode> bindingMap = null;
 	
 	private final JFileChooser fileChooser = new JFileChooser();
@@ -254,13 +254,13 @@ public class GuiApp extends JFrame{
 	
 	class SearchAction extends AbstractAction{
 		private static final long serialVersionUID = 1638709187169923458L;
-		private XPathEngineWrapper engine;
+		private XPathProcessor engine;
 		
 		public SearchAction(){
 			putValue(Action.NAME, "Search");
 		}
 		
-		public void setEngine(XPathEngineWrapper engine){
+		public void setEngine(XPathProcessor engine){
 			this.engine = engine;
 		}
 		
@@ -309,7 +309,7 @@ public class GuiApp extends JFrame{
 						try{
 							is = new FileInputStream(file);
 							analysePane.loadStream(is);
-							engine = new XPathEngineWrapper(new String(analysePane.getSlicer().getSavedChars()));
+							engine = new XPathProcessor(new String(analysePane.getSlicer().getSavedChars()));
 							searchAction.setEngine(engine);
 							bindElementsToText();
 						} catch (FileNotFoundException ex) {
@@ -374,7 +374,7 @@ public class GuiApp extends JFrame{
 							is = new FileInputStream(file);
 							preparedIs = prepareHtmlWithJsoup(is, cssElementsToRemove);
 							analysePane.loadStream(preparedIs);
-							engine = new XPathEngineWrapper(new String(analysePane.getSlicer().getSavedChars()));
+							engine = new XPathProcessor(new String(analysePane.getSlicer().getSavedChars()));
 							searchAction.setEngine(engine);
 							bindElementsToText();
 						} catch (FileNotFoundException ex) {
@@ -424,30 +424,6 @@ public class GuiApp extends JFrame{
 					el.remove();
 				}
 			}
-			/*
-			parsedDoc.head().remove();
-			Elements imgs = parsedDoc.select("img");
-			for(Element img : imgs){
-				//img.after("</img>");
-				img.remove();
-			}
-			Elements inputs = parsedDoc.select("input");
-			for(Element input : inputs){
-				input.remove();
-			}
-			Elements brs = parsedDoc.select("br");
-			for(Element br : brs){
-				br.remove();
-			}
-			Elements areas = parsedDoc.select("area");
-			for(Element area : areas){
-				area.remove();
-			}
-			Elements buttons = parsedDoc.select("button");
-			for(Element button : buttons){
-				button.remove();
-			}
-			*/
 			String fromHtml = parsedDoc.html();
 			String corrected = fromHtml.replaceAll("&nbsp;", "&#160;");
 			logger.info(String.format("html retrieved from Jsoup parsed document"));

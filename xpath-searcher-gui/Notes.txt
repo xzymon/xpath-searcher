@@ -8,10 +8,6 @@ Poza tym posiada jeszcze pewne śmieci w kodzie (nadmiarowe, niepotrzebne zmienn
 Można by jeszcze upiększyć kod (poskracać, pododawać metody zamiast powtarzającego się kodu.
 Można by wywalić niepotrzebne klasy i w ten sposób uprościć organizację kodu
 
-Przy przetwarzaniu HTML przy użyciu JSoup:
- - wywalać HEAD - zawsze niepotrzebne
- - zamykać każdy element <img> domykającym znacznikiem </img> natychmiastowo!
-
 CELE:
 ->
 wrapper mógłby mieć podpinaną (wstrzykiwalną) konsolę do wpisywania poleceń i zwracania tekstowych komunikatów z wykonania poleceń
@@ -29,3 +25,16 @@ Konsola stosuje filtr by edycja była możliwa tylko po znaku zachęty
    $ iterate -> iteruje po WSZYSTKICH elementach (i atrybutach) w dokumencie - zwraca komunikat o ilości i oczekuje "next" lub "exit"
    $ iterate --elements-only -> iteruje tylko po elementach
    
+   
+Jak powinna działać logika
+JTextPaneWrapper:
+	- posiada jako dokument instancję ImmutableXMLDocument
+	- otrzymuje obiekt zarządzający stanem [XMLStateHolder]
+	- implementuje metody umożliwiające pobieranie[listy dostępnych], dodawanie i wybór bieżącej palety
+	
+[XMLStateHolder] obiekt zarządzający stanem
+-> zawiera zawartość tekstową [zapisany strumień]
+-> zawiera mapowanie XPath -> SliceRep
+-> umożliwia zarejestrowanie handlera do obsługi znalezionych w wyszukiwaniu węzłów
+-> dostarcza api do :
+	- wywołania wyszukiwania

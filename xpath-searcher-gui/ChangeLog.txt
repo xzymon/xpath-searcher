@@ -62,3 +62,6 @@ Now ImprovedSlicer contains char[] instead of byte[] as data, but uses InputStre
 [v 0.0.8-SNAPSHOT] [15-05-2015]
 \ Before moving XPath-processing logic to core lib
 + able to work with HTML after removing certain types of elements (head, img, input, br, area, button)
+
+[v 0.0.8-SNAPSHOT] [15-05-2015] second commit
+\ to keep Notes
