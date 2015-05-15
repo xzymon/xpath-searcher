@@ -7,12 +7,15 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -35,6 +38,9 @@ import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import javax.xml.xpath.XPathExpressionException;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
@@ -123,7 +129,8 @@ public class GuiApp extends JFrame{
 		
 		menuBar = new JMenuBar();
 		mFile = new JMenu("File");
-		mFile.add(new OpenFileAction());
+		//mFile.add(new OpenFileAction());
+		mFile.add(new OpenFileWithJSoupAction());
 		mFile.add(new StainTextAction());
 		mFile.addSeparator();
 		mFile.add(new CloseAction());
@@ -325,6 +332,128 @@ public class GuiApp extends JFrame{
 			}
 		}
 		
+	}
+	
+	class OpenFileWithJSoupAction extends AbstractAction{
+		private static final long serialVersionUID = -7305718383597147777L;
+
+		public OpenFileWithJSoupAction(){
+			putValue(Action.NAME, "Open File with JSoup");
+			putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK));
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			int returnValue = fileChooser.showOpenDialog(GuiApp.this);
+			
+			if(returnValue == JFileChooser.APPROVE_OPTION){
+				File file = fileChooser.getSelectedFile();
+				logger.info(String.format("Opening file: %1$s", file.getAbsolutePath()));
+				if(file.exists()){
+					if(file.canRead()){
+						InputStream is = null;
+						InputStream preparedIs = null;
+						List<String> cssElementsToRemove = new ArrayList<String>();
+						cssElementsToRemove.add("head");
+						cssElementsToRemove.add("img");
+						cssElementsToRemove.add("input");
+						cssElementsToRemove.add("br");
+						cssElementsToRemove.add("area");
+						cssElementsToRemove.add("button");
+						cssElementsToRemove.add("script");
+						
+						cssElementsToRemove.add("div.footer1");
+						cssElementsToRemove.add("div.footer2");
+						cssElementsToRemove.add("div.footer3");
+						cssElementsToRemove.add("div.footer4");
+						cssElementsToRemove.add("div.center");
+						cssElementsToRemove.add("div.askCookies");
+						cssElementsToRemove.add("div.hidden");
+						
+						try{
+							is = new FileInputStream(file);
+							preparedIs = prepareHtmlWithJsoup(is, cssElementsToRemove);
+							analysePane.loadStream(preparedIs);
+							engine = new XPathEngineWrapper(new String(analysePane.getSlicer().getSavedChars()));
+							searchAction.setEngine(engine);
+							bindElementsToText();
+						} catch (FileNotFoundException ex) {
+							logger.error(String.format("FileNotFoundException during: new FileInputStream(\"%1$s\")", file.getAbsolutePath()));
+						} catch (IOException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						} finally {
+							if(is!=null){
+								try{
+									is.close();
+								} catch(IOException ex){
+									ex.printStackTrace();
+								}
+							}
+							if(preparedIs!=null){
+								try{
+									preparedIs.close();
+								} catch(IOException ex){
+									ex.printStackTrace();
+								}
+							}
+						}
+					} else {
+						logger.error(String.format("File %1$s could not be opened!", file.getAbsolutePath()));
+					}
+				} else {
+					logger.error(String.format("File %1$s does not exist!", file.getAbsolutePath()));
+				}
+			}
+		}
+		
+	}
+	
+	private InputStream prepareHtmlWithJsoup(InputStream srcStream, List<String> elementTypesToRemove) throws IOException{
+		InputStream resultStream = null;
+		int avail = srcStream.available();
+		if(avail>0){
+			byte[] bytes = new byte[avail];
+			srcStream.read(bytes);
+			String strSource = new String(bytes);
+			logger.info(String.format("parsing by Jsoup..."));
+			org.jsoup.nodes.Document parsedDoc = Jsoup.parse(strSource);
+			for(String typeName : elementTypesToRemove){
+				Elements els = parsedDoc.select(typeName);
+				for(Element el: els){
+					el.remove();
+				}
+			}
+			/*
+			parsedDoc.head().remove();
+			Elements imgs = parsedDoc.select("img");
+			for(Element img : imgs){
+				//img.after("</img>");
+				img.remove();
+			}
+			Elements inputs = parsedDoc.select("input");
+			for(Element input : inputs){
+				input.remove();
+			}
+			Elements brs = parsedDoc.select("br");
+			for(Element br : brs){
+				br.remove();
+			}
+			Elements areas = parsedDoc.select("area");
+			for(Element area : areas){
+				area.remove();
+			}
+			Elements buttons = parsedDoc.select("button");
+			for(Element button : buttons){
+				button.remove();
+			}
+			*/
+			String fromHtml = parsedDoc.html();
+			String corrected = fromHtml.replaceAll("&nbsp;", "&#160;");
+			logger.info(String.format("html retrieved from Jsoup parsed document"));
+			resultStream = new ByteArrayInputStream(corrected.getBytes());
+		}
+		return resultStream;
 	}
 	
 	class StainTextAction extends AbstractAction {

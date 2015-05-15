@@ -52,10 +52,10 @@ public class ImmutableXMLDocument extends DefaultStyledDocument implements Style
 		public void remove(FilterBypass fb, int offset, int length)
 				throws BadLocationException {
 			if(allowMutability){
-				logger.info(String.format("remove(fb, %1$d, %2$d) operation allowed", offset, length) );
+				logger.debug(String.format("remove(fb, %1$d, %2$d) operation allowed", offset, length) );
 				super.remove(fb, offset, length);
 			} else {
-				logger.info(String.format("remove(fb, %1$d, %2$d) operation rejected", offset, length) );
+				logger.debug(String.format("remove(fb, %1$d, %2$d) operation rejected", offset, length) );
 			}
 		}
 
@@ -63,10 +63,10 @@ public class ImmutableXMLDocument extends DefaultStyledDocument implements Style
 		public void insertString(FilterBypass fb, int offset, String string,
 				AttributeSet attr) throws BadLocationException {
 			if(allowMutability){
-				logger.info(String.format("insertString(fb, %1$d, \"%2$s\", attr) operation allowed", offset, string) );
+				logger.debug(String.format("insertString(fb, %1$d, \"%2$s\", attr) operation allowed", offset, string) );
 				super.insertString(fb, offset, string, attr);
 			} else {
-				logger.info(String.format("insertString(fb, %1$d, \"%2$s\", attr) operation rejected", offset, string) );
+				logger.debug(String.format("insertString(fb, %1$d, \"%2$s\", attr) operation rejected", offset, string) );
 			}
 		}
 
@@ -74,10 +74,10 @@ public class ImmutableXMLDocument extends DefaultStyledDocument implements Style
 		public void replace(FilterBypass fb, int offset, int length,
 				String text, AttributeSet attrs) throws BadLocationException {
 			if(allowMutability){
-				logger.info(String.format("replace(fb, %1$d, %2$d, \"%3$s\", attrs) operation allowed", offset, length, text) );
+				logger.debug(String.format("replace(fb, %1$d, %2$d, \"%3$s\", attrs) operation allowed", offset, length, text) );
 				super.replace(fb, offset, length, text, attrs);
 			} else {
-				logger.info(String.format("replace(fb, %1$d, %2$d, \"%3$s\", attrs) operation rejected", offset, length, text) );
+				logger.debug(String.format("replace(fb, %1$d, %2$d, \"%3$s\", attrs) operation rejected", offset, length, text) );
 			}
 		}
 		

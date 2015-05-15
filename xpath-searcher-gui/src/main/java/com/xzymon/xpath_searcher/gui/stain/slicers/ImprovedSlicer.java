@@ -91,7 +91,7 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 		int slashPos;
 		
 		for(SliceRepresentation sliceR: slicesR){
-			logger.info(sliceR.toString());
+			logger.debug(sliceR.toString());
 			
 			//TODO: here
 			if(sliceR.isRaw()){
@@ -167,7 +167,7 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 			pre_cp = cp;
 			cp = controlPoints.get(cploop);
 			
-			logger.info(String.format("curSlice is %1$s, mode is %2$s, pos=%3$d, ch=[%4$s]",
+			logger.debug(String.format("curSlice is %1$s, mode is %2$s, pos=%3$d, ch=[%4$s]",
 					curSlice==null?"null":"not null", modeList.getLast().toString(), cp.getPosition(), cp.getChar()));
 			
 			switch(cp.getChar()){

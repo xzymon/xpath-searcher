@@ -8,6 +8,10 @@ Poza tym posiada jeszcze pewne śmieci w kodzie (nadmiarowe, niepotrzebne zmienn
 Można by jeszcze upiększyć kod (poskracać, pododawać metody zamiast powtarzającego się kodu.
 Można by wywalić niepotrzebne klasy i w ten sposób uprościć organizację kodu
 
+Przy przetwarzaniu HTML przy użyciu JSoup:
+ - wywalać HEAD - zawsze niepotrzebne
+ - zamykać każdy element <img> domykającym znacznikiem </img> natychmiastowo!
+
 CELE:
 ->
 wrapper mógłby mieć podpinaną (wstrzykiwalną) konsolę do wpisywania poleceń i zwracania tekstowych komunikatów z wykonania poleceń
