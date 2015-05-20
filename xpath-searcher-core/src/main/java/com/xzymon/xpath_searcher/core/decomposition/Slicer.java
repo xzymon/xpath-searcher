@@ -1,4 +1,4 @@
-package com.xzymon.xpath_searcher.gui.stain.slicers;
+package com.xzymon.xpath_searcher.core.decomposition;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -11,40 +11,39 @@ import java.util.ListIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.xzymon.xpath_searcher.gui.stain.exceptions.BuildingNodeStructureException;
-import com.xzymon.xpath_searcher.gui.stain.exceptions.InvalidCharacterException;
-import com.xzymon.xpath_searcher.gui.stain.exceptions.SlicingException;
-import com.xzymon.xpath_searcher.gui.stain.handlers.AttributeRepresentation;
-import com.xzymon.xpath_searcher.gui.stain.handlers.ErrorRepresentation;
-import com.xzymon.xpath_searcher.gui.stain.handlers.ProcessingHandler;
-import com.xzymon.xpath_searcher.gui.stain.handlers.SliceInterior;
-import com.xzymon.xpath_searcher.gui.stain.handlers.SliceRepresentation;
-import com.xzymon.xpath_searcher.gui.stain.handlers.SlicerMode;
-import com.xzymon.xpath_searcher.gui.stain.handlers.control.ControlPoint;
-import com.xzymon.xpath_searcher.gui.stain.handlers.control.DoubleQuoteControlPoint;
-import com.xzymon.xpath_searcher.gui.stain.handlers.control.EqualsSignControlPoint;
-import com.xzymon.xpath_searcher.gui.stain.handlers.control.ExclamationMarkControlPoint;
-import com.xzymon.xpath_searcher.gui.stain.handlers.control.GreaterThanControlPoint;
-import com.xzymon.xpath_searcher.gui.stain.handlers.control.LessThanControlPoint;
-import com.xzymon.xpath_searcher.gui.stain.handlers.control.NoneControlPoint;
-import com.xzymon.xpath_searcher.gui.stain.handlers.control.QuestionMarkControlPoint;
-import com.xzymon.xpath_searcher.gui.stain.handlers.control.SingleQuoteControlPoint;
-import com.xzymon.xpath_searcher.gui.stain.handlers.control.SlashSignControlPoint;
-import com.xzymon.xpath_searcher.gui.stain.handlers.control.WhitespaceControlPoint;
-import com.xzymon.xpath_searcher.gui.stain.structure.SlicedNode;
+import com.xzymon.xpath_searcher.core.dom.SlicedNode;
+import com.xzymon.xpath_searcher.core.exception.BuildingNodeStructureException;
+import com.xzymon.xpath_searcher.core.exception.InvalidCharacterException;
+import com.xzymon.xpath_searcher.core.exception.SlicingException;
+import com.xzymon.xpath_searcher.core.listener.SlicingListener;
+import com.xzymon.xpath_searcher.core.listener.internal.ControlPoint;
+import com.xzymon.xpath_searcher.core.listener.internal.DoubleQuoteControlPoint;
+import com.xzymon.xpath_searcher.core.listener.internal.EqualsSignControlPoint;
+import com.xzymon.xpath_searcher.core.listener.internal.ExclamationMarkControlPoint;
+import com.xzymon.xpath_searcher.core.listener.internal.GreaterThanControlPoint;
+import com.xzymon.xpath_searcher.core.listener.internal.LessThanControlPoint;
+import com.xzymon.xpath_searcher.core.listener.internal.NoneControlPoint;
+import com.xzymon.xpath_searcher.core.listener.internal.QuestionMarkControlPoint;
+import com.xzymon.xpath_searcher.core.listener.internal.SingleQuoteControlPoint;
+import com.xzymon.xpath_searcher.core.listener.internal.SlashSignControlPoint;
+import com.xzymon.xpath_searcher.core.listener.internal.SlicerMode;
+import com.xzymon.xpath_searcher.core.listener.internal.WhitespaceControlPoint;
+import com.xzymon.xpath_searcher.core.parsing.AttributeRepresentation;
+import com.xzymon.xpath_searcher.core.parsing.ErrorRepresentation;
+import com.xzymon.xpath_searcher.core.parsing.SliceInterior;
+import com.xzymon.xpath_searcher.core.parsing.SliceRepresentation;
 
-public class ImprovedSlicer {
-private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.class.getName());
+public class Slicer {
+	private static final Logger logger = LoggerFactory.getLogger(Slicer.class.getName());
 	
 	private char[] savedChars = null;
 	private LinkedList<SlicerMode> modeList = null;
-	private LinkedList<ControlPoint> controlPoints;
+	private LinkedList<ControlPoint> controlPoints = null;
+	private LinkedList<SliceRepresentation> slicesR = null;
 	
-	LinkedList<SliceRepresentation> slicesR = null;
+	private List<SlicingListener> slicingListeners;
 	
-	private ProcessingHandler handler = null;
-	
-	public ImprovedSlicer(InputStream is){
+	public Slicer(InputStream is) throws SlicingException{
 		try{
 			int avail = is.available();
 			if(avail>0){
@@ -56,6 +55,7 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 				int read = reader.read(charBuf);
 				savedChars = new char[read];
 				System.arraycopy(charBuf, 0, savedChars, 0, read);
+				slice();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -64,26 +64,27 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 		}
 	}
 	
-	public ImprovedSlicer(byte[] savedStream) throws IOException{
+	public Slicer(byte[] savedStream) throws IOException, SlicingException{
 		ByteArrayInputStream bais = new ByteArrayInputStream(savedStream);
 		InputStreamReader reader = new InputStreamReader(bais);
 		char[] charBuf = new char[savedStream.length];
 		int read = reader.read(charBuf);
 		savedChars = new char[read];
 		System.arraycopy(charBuf, 0, savedChars, 0, read);
+		slice();
 	}
 	
-	public ImprovedSlicer(char[] chars){
+	public Slicer(char[] chars) throws SlicingException{
 		this.savedChars = chars;
+		slice();
 	}
 	
-	public void slice() throws SlicingException{
+	private void slice() throws SlicingException{
 		findControlPoints();
 		getSlices();
-		useHandler();
 	}
 	
-	public void useHandler(){
+	public void invokeListeners(){
 		AttributeRepresentation attr = null;
 		ErrorRepresentation error = null;
 		
@@ -95,31 +96,47 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 			
 			//TODO: here
 			if(sliceR.isRaw()){
-				handler.rawText(sliceR.getStartPosition(), sliceR.getEndPosition());
-			} else if(sliceR.isOther()){
-				handler.otherTag(sliceR.getStartPosition(), sliceR.getEndPosition());
-			} else {
-				handler.lessThanStartChar(sliceR.getStartPosition());
-				if(sliceR.isClosing()){
-					handler.closingSlash(sliceR.getClosingSlashPosition());
+				for(SlicingListener sl : slicingListeners){
+					sl.rawText(sliceR.getStartPosition(), sliceR.getEndPosition());
 				}
-				handler.tagName(sliceR.getNameStartPosition(), sliceR.getNameEndPosition());
+			} else if(sliceR.isOther()){
+				for(SlicingListener sl : slicingListeners){
+					sl.otherTag(sliceR.getStartPosition(), sliceR.getEndPosition());
+				}
+			} else {
+				for(SlicingListener sl : slicingListeners){
+					sl.lessThanStartChar(sliceR.getStartPosition());
+				}
+				if(sliceR.isClosing()){
+					for(SlicingListener sl : slicingListeners){
+						sl.closingSlash(sliceR.getClosingSlashPosition());
+					}
+				}
+				for(SlicingListener sl : slicingListeners){
+					sl.tagName(sliceR.getNameStartPosition(), sliceR.getNameEndPosition());
+				}
 				gapStart = sliceR.getNameEndPosition()+1;
 				if(sliceR.getInterior()!=null){
 					for(SliceInterior sInt : sliceR.getInterior()){
 						gapEnd = sInt.getStartPosition()-1;
 						if(gapEnd>=gapStart){
-							handler.tagGap(gapStart, gapEnd);
+							for(SlicingListener sl : slicingListeners){
+								sl.tagGap(gapStart, gapEnd);
+							}
 						}
 						if(sInt instanceof AttributeRepresentation){
 							attr = (AttributeRepresentation) sInt;
-							handler.attributeName(attr.getStartsAt(), attr.getNameEndsAt());
-							handler.attributeEqualsSign(attr.getEqualsSignAt());
-							handler.attributeValue(attr.getStartQuotationMarkAt(), attr.getEndQuotationMarkAt());
+							for(SlicingListener sl : slicingListeners){
+								sl.attributeName(attr.getStartsAt(), attr.getNameEndsAt());
+								sl.attributeEqualsSign(attr.getEqualsSignAt());
+								sl.attributeValue(attr.getStartQuotationMarkAt(), attr.getEndQuotationMarkAt());
+							}
 						}
 						if(sInt instanceof ErrorRepresentation){
 							error = (ErrorRepresentation) sInt;
-							handler.error(error.getStartPosition(), error.getEndPosition());
+							for(SlicingListener sl : slicingListeners){
+								sl.error(error.getStartPosition(), error.getEndPosition());
+							}
 						}
 						gapStart = sInt.getEndPosition()+1;
 					}
@@ -128,12 +145,18 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 				if(sliceR.isSelfClosing()){
 					slashPos = sliceR.getClosingSlashPosition();
 					if(slashPos>gapStart){
-						handler.tagGap(gapStart, slashPos-1);
+						for(SlicingListener sl : slicingListeners){
+							sl.tagGap(gapStart, slashPos-1);
+						}
 						gapStart = slashPos+1;
 					}
-					handler.closingSlash(sliceR.getClosingSlashPosition());
+					for(SlicingListener sl : slicingListeners){
+						sl.closingSlash(sliceR.getClosingSlashPosition());
+					}
 				}
-				handler.greaterThanEndingChar(sliceR.getEndPosition());
+				for(SlicingListener sl : slicingListeners){
+					sl.greaterThanEndingChar(sliceR.getEndPosition());
+				}
 			}
 		}
 	}
@@ -470,7 +493,7 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 		return slicesR;
 	}
 	
-	public void findControlPoints(){
+	private void findControlPoints(){
 		controlPoints = new LinkedList<ControlPoint>();
 		char read_ch;
 		int pos=0;
@@ -547,10 +570,16 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 	}
 
 	public void setSavedChars(char[] chars) {
-		this.savedChars = chars;
+		try {
+			this.savedChars = chars;
+			slice();
+		} catch (SlicingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
-	public ControlPoint getPreviousControlPointFrom(ControlPoint toFind){
+	private ControlPoint getPreviousControlPointFrom(ControlPoint toFind){
 		ControlPoint result = null;
 		if(toFind!=null){
 			ControlPoint cp = null;
@@ -564,12 +593,27 @@ private static final Logger logger = LoggerFactory.getLogger(ImprovedSlicer.clas
 		}
 		return result;
 	}
-	
-	public void setProcessingHandler(ProcessingHandler handler){
-		this.handler = handler;
+
+	public List<SlicingListener> getSlicingListeners(){
+		return this.slicingListeners;
 	}
 	
-	public ControlPoint regainError(ControlPoint cp, ErrorRepresentation curError, SliceRepresentation curSlice){
+	public void addSlicingListener(SlicingListener listener){
+		if(slicingListeners==null){
+			slicingListeners = new LinkedList<SlicingListener>();
+		}
+		if(!slicingListeners.contains(listener)){
+			slicingListeners.add(listener);
+		}
+	}
+	
+	public void removeSlicingListener(SlicingListener listener){
+		if(slicingListeners!=null){
+			slicingListeners.remove(listener);
+		}
+	}
+	
+	private ControlPoint regainError(ControlPoint cp, ErrorRepresentation curError, SliceRepresentation curSlice){
 		logger.info(String.format("regaining error at %1$d on char=%2$d ['%3$s']", cp.getPosition(), (int)cp.getChar(), cp.getChar()));
 		curError.setEndPosition(cp.getPosition()-1);
 		curSlice.addError(curError);

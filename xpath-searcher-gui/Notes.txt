@@ -25,16 +25,23 @@ Konsola stosuje filtr by edycja była możliwa tylko po znaku zachęty
    $ iterate -> iteruje po WSZYSTKICH elementach (i atrybutach) w dokumencie - zwraca komunikat o ilości i oczekuje "next" lub "exit"
    $ iterate --elements-only -> iteruje tylko po elementach
    
-   
 Jak powinna działać logika
 JTextPaneWrapper:
 	- posiada jako dokument instancję ImmutableXMLDocument
-	- otrzymuje obiekt zarządzający stanem [XMLStateHolder]
+	- otrzymuje [przechowuje] obiekt zarządzający stanem [XMLStateHolder]
 	- implementuje metody umożliwiające pobieranie[listy dostępnych], dodawanie i wybór bieżącej palety
 	
 [XMLStateHolder] obiekt zarządzający stanem
 -> zawiera zawartość tekstową [zapisany strumień]
 -> zawiera mapowanie XPath -> SliceRep
--> umożliwia zarejestrowanie handlera do obsługi znalezionych w wyszukiwaniu węzłów
+-> umożliwia zarejestrowanie handlera do obsługi znalezionych w wyszukiwaniu węzłów ?
 -> dostarcza api do :
 	- wywołania wyszukiwania
+	
+	
+JAK (GDZIE?) PODPINAĆ LISTENERY W XMLStateHolder'ze?
+
+Złączyć całą logikę i stworzyć nową wersję Gui do przetestowania nowej konstrukcji logiki
+
+
+Stworzyć filtr do wykorzystania OtherTagRemoveSlicingListenera

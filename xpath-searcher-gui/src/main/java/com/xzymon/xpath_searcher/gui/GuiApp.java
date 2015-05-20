@@ -14,9 +14,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.swing.AbstractAction;
@@ -46,11 +44,10 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.xzymon.xpath_searcher.core.XPathProcessor;
+import com.xzymon.xpath_searcher.core.dom.SlicedNode;
+import com.xzymon.xpath_searcher.core.parsing.AttributeRepresentation;
+import com.xzymon.xpath_searcher.core.parsing.SliceRepresentation;
 import com.xzymon.xpath_searcher.gui.stain.XmlStylePalettesManager;
-import com.xzymon.xpath_searcher.gui.stain.exceptions.BuildingNodeStructureException;
-import com.xzymon.xpath_searcher.gui.stain.handlers.SliceRepresentation;
-import com.xzymon.xpath_searcher.gui.stain.structure.SlicedNode;
 
 public class GuiApp extends JFrame{
 	private static final long serialVersionUID = 3219548713775085362L;
@@ -63,16 +60,19 @@ public class GuiApp extends JFrame{
 	private JPanel mainPanel, topPanel, centralPanel;
 	private JTextPaneWrapper analysePane;
 
-	private SearchAction searchAction;
-	private SelectAction selectAction;
-	private JButton searchButton;
+	//private SelectAction selectAction;
+	//private SearchAction searchAction;
+	//private NextResultAction nextResultAction;
+	//private ResetAction resetAction;
+	//private ClearAction clearAction;
+	
 	private JButton selectButton;
-	private JButton stainAgainButton;
+	private JButton searchButton;
+	private JButton nextResultButton;
+	private JButton resetButton;
+	private JButton clearButton;
 
 	private JTextField searchField;
-	
-	private XPathProcessor engine = null;
-	private Map<Node, SlicedNode> bindingMap = null;
 	
 	private final JFileChooser fileChooser = new JFileChooser();
 	private final XmlStylePalettesManager palettesManager = new XmlStylePalettesManager();
@@ -131,7 +131,6 @@ public class GuiApp extends JFrame{
 		mFile = new JMenu("File");
 		//mFile.add(new OpenFileAction());
 		mFile.add(new OpenFileWithJSoupAction());
-		mFile.add(new StainTextAction());
 		mFile.addSeparator();
 		mFile.add(new CloseAction());
 		menuBar.add(mFile);
@@ -143,12 +142,13 @@ public class GuiApp extends JFrame{
 		
 		
 		JLabel searchLabel = new JLabel("Phrase to search");
-		searchField = new JTextField(30);
-		searchAction = new SearchAction();
-		searchButton = new JButton(searchAction);
-		selectAction = new SelectAction();
-		selectButton = new JButton(selectAction);
-		stainAgainButton = new JButton(new StainAgainAction());
+		searchField = new JTextField(50);
+		searchButton = new JButton(new SearchAction());
+		nextResultButton = new JButton(new NextResultAction());
+		resetButton = new JButton(new  ResetAction());
+		clearButton = new JButton(new ClearAction());
+		
+		selectButton = new JButton(new SelectAction());
 		
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.gridx = 0;
@@ -160,10 +160,16 @@ public class GuiApp extends JFrame{
 		topPanel.add(searchField, gbc);
 		gbc.gridx = 2;
 		topPanel.add(searchButton, gbc);
-		gbc.gridx = 3;
+		gbc.gridy = 1;
+		gbc.gridx = 0;
+		topPanel.add(nextResultButton, gbc);
+		gbc.gridx = 1;
+		topPanel.add(resetButton, gbc);
+		gbc.gridx = 2;
+		topPanel.add(clearButton, gbc);
+		gbc.gridy = 2;
+		gbc.gridx = 0;
 		topPanel.add(selectButton, gbc);
-		gbc.gridx = 4;
-		topPanel.add(stainAgainButton, gbc);
 		
 		analysePane = new JTextPaneWrapper();
 		analysePane.setPalette(palettesManager.getCurrentPalette());
@@ -208,35 +214,6 @@ public class GuiApp extends JFrame{
 		return props;
 	}
 	
-	private void bindElementsToText(){
-		Node xPathNode = null;
-		SlicedNode slicedNode = null;
-		bindingMap = new HashMap<Node, SlicedNode>();
-		try {
-			NodeList nodeList = engine.findNodes("//*");
-			SlicedNode rootSlicedNode = analysePane.getSlicer().buildStructure();
-			SlicedNode.SlicedNodeIterator snIt = rootSlicedNode.iterator();
-			for(int nodeLoop=0; nodeLoop<nodeList.getLength(); nodeLoop++){
-				xPathNode = nodeList.item(nodeLoop);
-				if(snIt.hasNext()){
-					slicedNode = snIt.next();
-					logger.info(String.format("parallel nodes: xpath=%2$s(%1$d), sliced=%3$s", nodeLoop, xPathNode.getNodeName(), slicedNode.getName()));
-					if(xPathNode.getNodeName().equals(slicedNode.getName())){
-						bindingMap.put(xPathNode, slicedNode);
-					} else {
-						logger.info(String.format("names NOT EQUAL: xpath=%2$s(%1$d), sliced=%3$s", nodeLoop, xPathNode.getNodeName(), slicedNode.getName()));
-					}
-				}
-			}
-		} catch (XPathExpressionException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (BuildingNodeStructureException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
 	class CloseAction extends AbstractAction{
 		private static final long serialVersionUID = -2458760999790533135L;
 
@@ -254,38 +231,75 @@ public class GuiApp extends JFrame{
 	
 	class SearchAction extends AbstractAction{
 		private static final long serialVersionUID = 1638709187169923458L;
-		private XPathProcessor engine;
-		
+
 		public SearchAction(){
 			putValue(Action.NAME, "Search");
 		}
 		
-		public void setEngine(XPathProcessor engine){
-			this.engine = engine;
-		}
-		
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			SlicedNode snode = null;
-			SliceRepresentation srep = null;
 			String phrase = searchField.getText();
 			logger.info(String.format("Invoked for search phrase: %1$s", phrase));
 			stainAgain();
-			if(engine!=null){
+			//if(engine!=null){
+			if(!analysePane.isEmpty()){
 				try {
-					NodeList list = engine.findNodes(phrase);
-					for(int nloop=0; nloop<list.getLength(); nloop++){
-						snode = bindingMap.get(list.item(nloop));
-						srep = snode.getOpeningSlice();
-						analysePane.setSelectionStart(srep.getNameStartPosition());
-						analysePane.setSelectionEnd(srep.getNameEndPosition()+1);
-						selectText();
-					}
+					//NodeList list = engine.findNodes(phrase);
+					analysePane.newSearch(phrase);
+					analysePane.selectAllFoundNodes();
 				} catch (XPathExpressionException e1) {
 					e1.printStackTrace();
 				}
 			}
 		}		
+	}
+	
+	
+	class NextResultAction extends AbstractAction{
+		private static final long serialVersionUID = 5431085850101225464L;
+
+		public NextResultAction(){
+			putValue(Action.NAME, "Next Result");
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			String phrase = searchField.getText();
+			logger.info(String.format("Invoked for search phrase: %1$s", phrase));
+			stainAgain();
+			analysePane.nextNode();
+		}		
+	}
+	
+	class ResetAction extends AbstractAction{
+		private static final long serialVersionUID = 2735784609760788713L;
+
+		public ResetAction(){
+			putValue(Action.NAME, "Reset");
+		}
+		
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			String phrase = searchField.getText();
+			logger.info(String.format("Invoked for search phrase: %1$s", phrase));
+			stainAgain();
+			analysePane.reset();
+		}		
+	}
+	
+	class ClearAction extends AbstractAction {
+		private static final long serialVersionUID = -8592549398602437626L;
+
+		public ClearAction(){
+			putValue(Action.NAME, "Clear");
+		}
+
+		@Override
+		public void actionPerformed(ActionEvent e) {
+			searchField.setText("");
+			stainAgain();
+			analysePane.clear();
+		}
 	}
 	
 	class OpenFileAction extends AbstractAction{
@@ -309,9 +323,10 @@ public class GuiApp extends JFrame{
 						try{
 							is = new FileInputStream(file);
 							analysePane.loadStream(is);
-							engine = new XPathProcessor(new String(analysePane.getSlicer().getSavedChars()));
-							searchAction.setEngine(engine);
-							bindElementsToText();
+							//engine = new XPathProcessor(new String(analysePane.getSlicer().getSavedChars()));
+							//searchAction.setEngine(engine);
+							//bindElementsToText();
+							//bindAttributesToText();
 						} catch (FileNotFoundException ex) {
 							logger.error(String.format("FileNotFoundException during: new FileInputStream(\"%1$s\")", file.getAbsolutePath()));
 						} finally {
@@ -366,7 +381,7 @@ public class GuiApp extends JFrame{
 						cssElementsToRemove.add("div.footer2");
 						cssElementsToRemove.add("div.footer3");
 						cssElementsToRemove.add("div.footer4");
-						cssElementsToRemove.add("div.center");
+						//cssElementsToRemove.add("div.center");
 						cssElementsToRemove.add("div.askCookies");
 						cssElementsToRemove.add("div.hidden");
 						
@@ -374,13 +389,9 @@ public class GuiApp extends JFrame{
 							is = new FileInputStream(file);
 							preparedIs = prepareHtmlWithJsoup(is, cssElementsToRemove);
 							analysePane.loadStream(preparedIs);
-							engine = new XPathProcessor(new String(analysePane.getSlicer().getSavedChars()));
-							searchAction.setEngine(engine);
-							bindElementsToText();
 						} catch (FileNotFoundException ex) {
 							logger.error(String.format("FileNotFoundException during: new FileInputStream(\"%1$s\")", file.getAbsolutePath()));
 						} catch (IOException e1) {
-							// TODO Auto-generated catch block
 							e1.printStackTrace();
 						} finally {
 							if(is!=null){
@@ -432,32 +443,6 @@ public class GuiApp extends JFrame{
 		return resultStream;
 	}
 	
-	class StainTextAction extends AbstractAction {
-		private static final long serialVersionUID = -8505725995016348710L;
-
-		public StainTextAction() {
-			putValue(Action.NAME, "Stain Text");
-		}
-		
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			StyledDocument sdoc = analysePane.getStyledDocument();
-			
-			SimpleAttributeSet sas = new SimpleAttributeSet();
-			StyleConstants.setForeground(sas, Color.decode("0xFF0000"));
-			StyleConstants.setBold(sas, true);
-			
-			int length = analysePane.getDocument().getLength();
-			try {
-				sdoc.insertString(length, "Mayahee", sas);
-			} catch (BadLocationException ex) {
-				ex.printStackTrace();
-			}
-			//sdoc.setCharacterAttributes(0, 10, sas, false);
-		}
-		
-	}
-	
 	class SelectAction extends AbstractAction {
 		private static final long serialVersionUID = -4031390293576294826L;
 
@@ -473,19 +458,6 @@ public class GuiApp extends JFrame{
 	
 	public void selectText(){
 		analysePane.selectText();
-	}
-	
-	class StainAgainAction extends AbstractAction {
-		private static final long serialVersionUID = -8592549398602437626L;
-
-		public StainAgainAction(){
-			putValue(Action.NAME, "Stain Again");
-		}
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			stainAgain();
-		}
 	}
 	
 	public void stainAgain(){

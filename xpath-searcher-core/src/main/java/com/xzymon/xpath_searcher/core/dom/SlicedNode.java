@@ -1,4 +1,4 @@
-package com.xzymon.xpath_searcher.gui.stain.structure;
+package com.xzymon.xpath_searcher.core.dom;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -8,10 +8,10 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.xzymon.xpath_searcher.gui.stain.exceptions.BuildingNodeStructureException;
-import com.xzymon.xpath_searcher.gui.stain.exceptions.IsNotOpeningSliceRepresentationException;
-import com.xzymon.xpath_searcher.gui.stain.handlers.AttributeRepresentation;
-import com.xzymon.xpath_searcher.gui.stain.handlers.SliceRepresentation;
+import com.xzymon.xpath_searcher.core.exception.BuildingNodeStructureException;
+import com.xzymon.xpath_searcher.core.exception.IsNotOpeningSliceRepresentationException;
+import com.xzymon.xpath_searcher.core.parsing.AttributeRepresentation;
+import com.xzymon.xpath_searcher.core.parsing.SliceRepresentation;
 
 public class SlicedNode {
 	private static final Logger logger = LoggerFactory.getLogger(SlicedNode.class.getName());
@@ -167,12 +167,10 @@ public class SlicedNode {
 			this.nextNode = creator;
 		}
 		
-		@Override
 		public boolean hasNext() {
 			return nextNode!=null;
 		}
 
-		@Override
 		public SlicedNode next() {
 			SlicedNode result = nextNode;
 			Iterator<SlicedNode> listIt = null;

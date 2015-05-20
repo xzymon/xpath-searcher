@@ -65,3 +65,6 @@ Now ImprovedSlicer contains char[] instead of byte[] as data, but uses InputStre
 
 [v 0.0.8-SNAPSHOT] [15-05-2015] second commit
 \ to keep Notes
+
+[v 0.1.0-SNAPSHOT] [20-05-2015]
+\major changes in structure and logic

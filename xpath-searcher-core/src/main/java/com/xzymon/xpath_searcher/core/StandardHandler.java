@@ -4,22 +4,35 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 
-public class StandardHandler implements XPathProcessingHandler {
+import com.xzymon.xpath_searcher.core.listener.XPathSearchingListener;
+
+public class StandardHandler implements XPathSearchingListener {
 	private static final Logger logger = LoggerFactory.getLogger(StandardHandler.class.getName());
 
-	@Override
-	public void aboutToParseDocument() {
-		logger.info("parsing file to build Document");
+	public void nextNode(Node node, String expression, int nodeId) {
+		// TODO Auto-generated method stub
+		
 	}
 
-	@Override
-	public void parsingFinished() {
-		logger.info("File parsed.");
+	public void nodesExhausted(String expression) {
+		// TODO Auto-generated method stub
+		
 	}
 
-	@Override
-	public void nodeFound(Node node) {
-		logger.info(String.format("node: %1$s", node.getNodeName()));
+	public void foundNodesCount(String expression, int count) {
+		// TODO Auto-generated method stub
+		
 	}
 
+	public void stateReset(String expression) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void stateClear() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	
 }
