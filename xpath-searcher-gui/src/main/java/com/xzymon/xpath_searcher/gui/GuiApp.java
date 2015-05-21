@@ -1,7 +1,6 @@
 package com.xzymon.xpath_searcher.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
@@ -30,10 +29,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.UnsupportedLookAndFeelException;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
 import javax.xml.xpath.XPathExpressionException;
 
 import org.jsoup.Jsoup;
@@ -41,12 +36,11 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
-import com.xzymon.xpath_searcher.core.dom.SlicedNode;
-import com.xzymon.xpath_searcher.core.parsing.AttributeRepresentation;
-import com.xzymon.xpath_searcher.core.parsing.SliceRepresentation;
+import com.xzymon.xpath_searcher.core.converter.HTMLStreamConverter;
+import com.xzymon.xpath_searcher.core.converter.XMLStreamConverter;
+import com.xzymon.xpath_searcher.core.exception.SlicingException;
+import com.xzymon.xpath_searcher.core.listener.XMLNamespacesRemoveSlicingListener;
 import com.xzymon.xpath_searcher.gui.stain.XmlStylePalettesManager;
 
 public class GuiApp extends JFrame{
@@ -129,8 +123,8 @@ public class GuiApp extends JFrame{
 		
 		menuBar = new JMenuBar();
 		mFile = new JMenu("File");
-		//mFile.add(new OpenFileAction());
-		mFile.add(new OpenFileWithJSoupAction());
+		mFile.add(new OpenFileAction());
+		mFile.add(new OpenHtmlFileFilteringWithJSoupAction());
 		mFile.addSeparator();
 		mFile.add(new CloseAction());
 		menuBar.add(mFile);
@@ -306,7 +300,7 @@ public class GuiApp extends JFrame{
 		private static final long serialVersionUID = -7305718383597147777L;
 
 		public OpenFileAction(){
-			putValue(Action.NAME, "Open File");
+			putValue(Action.NAME, "Open XML File");
 			putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK));
 		}
 		
@@ -320,15 +314,20 @@ public class GuiApp extends JFrame{
 				if(file.exists()){
 					if(file.canRead()){
 						InputStream is = null;
+						InputStream filteredIs = null;
 						try{
 							is = new FileInputStream(file);
-							analysePane.loadStream(is);
-							//engine = new XPathProcessor(new String(analysePane.getSlicer().getSavedChars()));
-							//searchAction.setEngine(engine);
-							//bindElementsToText();
-							//bindAttributesToText();
+							XMLStreamConverter xmlConverter = new XMLStreamConverter(is);
+							filteredIs = xmlConverter.getConvertedStream();
+							analysePane.loadStream(filteredIs);
 						} catch (FileNotFoundException ex) {
 							logger.error(String.format("FileNotFoundException during: new FileInputStream(\"%1$s\")", file.getAbsolutePath()));
+						} catch (IOException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						} catch (SlicingException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
 						} finally {
 							if(is!=null){
 								try{
@@ -349,11 +348,11 @@ public class GuiApp extends JFrame{
 		
 	}
 	
-	class OpenFileWithJSoupAction extends AbstractAction{
+	class OpenHtmlFileFilteringWithJSoupAction extends AbstractAction{
 		private static final long serialVersionUID = -7305718383597147777L;
 
-		public OpenFileWithJSoupAction(){
-			putValue(Action.NAME, "Open File with JSoup");
+		public OpenHtmlFileFilteringWithJSoupAction(){
+			putValue(Action.NAME, "Open Html File with JSoup");
 			putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK));
 		}
 		
@@ -367,6 +366,7 @@ public class GuiApp extends JFrame{
 				if(file.exists()){
 					if(file.canRead()){
 						InputStream is = null;
+						InputStream filteredIs = null;
 						InputStream preparedIs = null;
 						List<String> cssElementsToRemove = new ArrayList<String>();
 						cssElementsToRemove.add("head");
@@ -377,6 +377,7 @@ public class GuiApp extends JFrame{
 						cssElementsToRemove.add("button");
 						cssElementsToRemove.add("script");
 						
+						/*
 						cssElementsToRemove.add("div.footer1");
 						cssElementsToRemove.add("div.footer2");
 						cssElementsToRemove.add("div.footer3");
@@ -384,19 +385,32 @@ public class GuiApp extends JFrame{
 						//cssElementsToRemove.add("div.center");
 						cssElementsToRemove.add("div.askCookies");
 						cssElementsToRemove.add("div.hidden");
+						*/
 						
 						try{
 							is = new FileInputStream(file);
-							preparedIs = prepareHtmlWithJsoup(is, cssElementsToRemove);
+							HTMLStreamConverter htmlConverter = new HTMLStreamConverter(is);
+							filteredIs = htmlConverter.getConvertedStream();
+							preparedIs = prepareHtmlWithJsoup(filteredIs, cssElementsToRemove);
 							analysePane.loadStream(preparedIs);
 						} catch (FileNotFoundException ex) {
 							logger.error(String.format("FileNotFoundException during: new FileInputStream(\"%1$s\")", file.getAbsolutePath()));
 						} catch (IOException e1) {
 							e1.printStackTrace();
+						} catch (SlicingException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
 						} finally {
 							if(is!=null){
 								try{
 									is.close();
+								} catch(IOException ex){
+									ex.printStackTrace();
+								}
+							}
+							if(filteredIs!=null){
+								try{
+									filteredIs.close();
 								} catch(IOException ex){
 									ex.printStackTrace();
 								}

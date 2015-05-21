@@ -185,6 +185,10 @@ public class XMLStateHolder implements StateHolder{
 			NodeList nodeList = engine.getAllFoundNodes();
 			SlicedNode rootSlicedNode = slicer.buildStructure();
 			SlicedNode.SlicedNodeIterator snIt = rootSlicedNode.iterator();
+			for(int i=0; i<nodeList.getLength(); i++){
+				xPathNode = nodeList.item(i);
+				logger.info(String.format("xpath node(%1$d)=%2$s", i, xPathNode.getNodeName()));
+			}
 			for(int nodeLoop=0; nodeLoop<nodeList.getLength(); /*nodeLoop++*/){
 				if(snIt.hasNext()){
 					slicedNode = snIt.next();

@@ -73,7 +73,7 @@ public class XPathProcessor {
 			for(ParsingListener pl : parsingListeners){
 				pl.aboutToParseDocument();
 			}
-			logger.info("DocumentBuilder : namespaceAware=%1$s, validating=%2$s, xIncludeAware=%3$s", builder.isNamespaceAware(), builder.isValidating(), builder.isXIncludeAware());
+			logger.info(String.format("DocumentBuilder : namespaceAware=%1$s, validating=%2$s, xIncludeAware=%3$s", builder.isNamespaceAware(), builder.isValidating(), builder.isXIncludeAware()));
 			xmlDocument = builder.parse(is);
 			for(ParsingListener pl : parsingListeners){
 				pl.parsingFinished();
