@@ -7,9 +7,9 @@ import javax.xml.xpath.XPathExpressionException;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.xzymon.xpath_searcher.core.dom.SlicedNode;
+import com.xzymon.xpath_searcher.core.dom.NodeRepresentation;
 import com.xzymon.xpath_searcher.core.listener.XPathSearchingListener;
-import com.xzymon.xpath_searcher.core.parsing.AttributeRepresentation;
+import com.xzymon.xpath_searcher.core.parser.AttributeRepresentation;
 
 public interface StateHolder {
 	int newSearch(String expression) throws XPathExpressionException;
@@ -18,7 +18,7 @@ public interface StateHolder {
 	void clear();
 	boolean isEmpty();
 	NodeList getFoundNodeList();
-	SlicedNode getBoundSlicedNode(Node node);
+	NodeRepresentation getBoundSlicedNode(Node node);
 	AttributeRepresentation getBoundAttributeRepresentation(Node node);
 	List<XPathSearchingListener> getSearchingListeners();
 	void addSearchingListener(XPathSearchingListener listener);

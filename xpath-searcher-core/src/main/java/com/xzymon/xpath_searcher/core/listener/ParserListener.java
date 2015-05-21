@@ -1,6 +1,6 @@
 package com.xzymon.xpath_searcher.core.listener;
 
-public interface SlicingListener {
+public interface ParserListener {
 	// dostarczanie informacji o trybach pracy w przedziałach znaków
 	void otherTag(int startPos, int lastPos);
 	void lessThanStartChar(int position);

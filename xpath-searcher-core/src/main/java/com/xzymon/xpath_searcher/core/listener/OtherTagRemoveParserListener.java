@@ -1,11 +1,11 @@
 package com.xzymon.xpath_searcher.core.listener;
 
 
-public class OtherTagRemoveSlicingListener implements SlicingListener {
+public class OtherTagRemoveParserListener implements ParserListener {
 	private StringBuilder collector;
 	private char[] data;
 	
-	public OtherTagRemoveSlicingListener(){
+	public OtherTagRemoveParserListener(){
 		collector = new StringBuilder(4096);
 	}
 	

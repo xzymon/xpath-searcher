@@ -6,14 +6,11 @@ import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 
 import javax.swing.AbstractAction;
@@ -31,35 +28,22 @@ import javax.swing.KeyStroke;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.xml.xpath.XPathExpressionException;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.xzymon.xpath_searcher.core.converter.HTMLStreamConverter;
-import com.xzymon.xpath_searcher.core.converter.XMLStreamConverter;
-import com.xzymon.xpath_searcher.core.exception.SlicingException;
-import com.xzymon.xpath_searcher.core.listener.XMLNamespacesRemoveSlicingListener;
 import com.xzymon.xpath_searcher.gui.stain.XmlStylePalettesManager;
 
 public class GuiApp extends JFrame{
 	private static final long serialVersionUID = 3219548713775085362L;
 	
-	private static final Logger logger = LoggerFactory.getLogger("com.xzymon.xpath_searcher.gui.GuiApp");
+	private static final Logger logger = LoggerFactory.getLogger(GuiApp.class.getName());
 	private static final String PROPS_PATH = "/xpath-searcher.properties";
 	
 	private JMenuBar menuBar;
 	private JMenu mFile;
 	private JPanel mainPanel, topPanel, centralPanel;
-	private JTextPaneWrapper analysePane;
+	private XPathSearcherPane analysePane;
 
-	//private SelectAction selectAction;
-	//private SearchAction searchAction;
-	//private NextResultAction nextResultAction;
-	//private ResetAction resetAction;
-	//private ClearAction clearAction;
-	
 	private JButton selectButton;
 	private JButton searchButton;
 	private JButton nextResultButton;
@@ -165,7 +149,7 @@ public class GuiApp extends JFrame{
 		gbc.gridx = 0;
 		topPanel.add(selectButton, gbc);
 		
-		analysePane = new JTextPaneWrapper();
+		analysePane = new XPathSearcherPane();
 		analysePane.setPalette(palettesManager.getCurrentPalette());
 		centralPanel.add(new JScrollPane(analysePane));
 		
@@ -301,7 +285,6 @@ public class GuiApp extends JFrame{
 
 		public OpenFileAction(){
 			putValue(Action.NAME, "Open XML File");
-			putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK));
 		}
 		
 		@Override
@@ -314,20 +297,11 @@ public class GuiApp extends JFrame{
 				if(file.exists()){
 					if(file.canRead()){
 						InputStream is = null;
-						InputStream filteredIs = null;
 						try{
 							is = new FileInputStream(file);
-							XMLStreamConverter xmlConverter = new XMLStreamConverter(is);
-							filteredIs = xmlConverter.getConvertedStream();
-							analysePane.loadStream(filteredIs);
+							analysePane.loadXMLStream(is);
 						} catch (FileNotFoundException ex) {
 							logger.error(String.format("FileNotFoundException during: new FileInputStream(\"%1$s\")", file.getAbsolutePath()));
-						} catch (IOException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						} catch (SlicingException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
 						} finally {
 							if(is!=null){
 								try{
@@ -366,17 +340,6 @@ public class GuiApp extends JFrame{
 				if(file.exists()){
 					if(file.canRead()){
 						InputStream is = null;
-						InputStream filteredIs = null;
-						InputStream preparedIs = null;
-						List<String> cssElementsToRemove = new ArrayList<String>();
-						cssElementsToRemove.add("head");
-						cssElementsToRemove.add("img");
-						cssElementsToRemove.add("input");
-						cssElementsToRemove.add("br");
-						cssElementsToRemove.add("area");
-						cssElementsToRemove.add("button");
-						cssElementsToRemove.add("script");
-						
 						/*
 						cssElementsToRemove.add("div.footer1");
 						cssElementsToRemove.add("div.footer2");
@@ -389,35 +352,13 @@ public class GuiApp extends JFrame{
 						
 						try{
 							is = new FileInputStream(file);
-							HTMLStreamConverter htmlConverter = new HTMLStreamConverter(is);
-							filteredIs = htmlConverter.getConvertedStream();
-							preparedIs = prepareHtmlWithJsoup(filteredIs, cssElementsToRemove);
-							analysePane.loadStream(preparedIs);
+							analysePane.loadHTMLStream(is, null);
 						} catch (FileNotFoundException ex) {
 							logger.error(String.format("FileNotFoundException during: new FileInputStream(\"%1$s\")", file.getAbsolutePath()));
-						} catch (IOException e1) {
-							e1.printStackTrace();
-						} catch (SlicingException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
 						} finally {
 							if(is!=null){
 								try{
 									is.close();
-								} catch(IOException ex){
-									ex.printStackTrace();
-								}
-							}
-							if(filteredIs!=null){
-								try{
-									filteredIs.close();
-								} catch(IOException ex){
-									ex.printStackTrace();
-								}
-							}
-							if(preparedIs!=null){
-								try{
-									preparedIs.close();
 								} catch(IOException ex){
 									ex.printStackTrace();
 								}
@@ -434,28 +375,7 @@ public class GuiApp extends JFrame{
 		
 	}
 	
-	private InputStream prepareHtmlWithJsoup(InputStream srcStream, List<String> elementTypesToRemove) throws IOException{
-		InputStream resultStream = null;
-		int avail = srcStream.available();
-		if(avail>0){
-			byte[] bytes = new byte[avail];
-			srcStream.read(bytes);
-			String strSource = new String(bytes);
-			logger.info(String.format("parsing by Jsoup..."));
-			org.jsoup.nodes.Document parsedDoc = Jsoup.parse(strSource);
-			for(String typeName : elementTypesToRemove){
-				Elements els = parsedDoc.select(typeName);
-				for(Element el: els){
-					el.remove();
-				}
-			}
-			String fromHtml = parsedDoc.html();
-			String corrected = fromHtml.replaceAll("&nbsp;", "&#160;");
-			logger.info(String.format("html retrieved from Jsoup parsed document"));
-			resultStream = new ByteArrayInputStream(corrected.getBytes());
-		}
-		return resultStream;
-	}
+	
 	
 	class SelectAction extends AbstractAction {
 		private static final long serialVersionUID = -4031390293576294826L;

@@ -1,4 +1,4 @@
-package com.xzymon.xpath_searcher.core.decomposition;
+package com.xzymon.xpath_searcher.core.parser;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -11,11 +11,11 @@ import java.util.ListIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.xzymon.xpath_searcher.core.dom.SlicedNode;
-import com.xzymon.xpath_searcher.core.exception.BuildingNodeStructureException;
+import com.xzymon.xpath_searcher.core.dom.NodeRepresentation;
+import com.xzymon.xpath_searcher.core.exception.BuildingDOMException;
 import com.xzymon.xpath_searcher.core.exception.InvalidCharacterException;
-import com.xzymon.xpath_searcher.core.exception.SlicingException;
-import com.xzymon.xpath_searcher.core.listener.SlicingListener;
+import com.xzymon.xpath_searcher.core.exception.ParserException;
+import com.xzymon.xpath_searcher.core.listener.ParserListener;
 import com.xzymon.xpath_searcher.core.listener.internal.ControlPoint;
 import com.xzymon.xpath_searcher.core.listener.internal.DoubleQuoteControlPoint;
 import com.xzymon.xpath_searcher.core.listener.internal.EqualsSignControlPoint;
@@ -26,24 +26,19 @@ import com.xzymon.xpath_searcher.core.listener.internal.NoneControlPoint;
 import com.xzymon.xpath_searcher.core.listener.internal.QuestionMarkControlPoint;
 import com.xzymon.xpath_searcher.core.listener.internal.SingleQuoteControlPoint;
 import com.xzymon.xpath_searcher.core.listener.internal.SlashSignControlPoint;
-import com.xzymon.xpath_searcher.core.listener.internal.SlicerMode;
 import com.xzymon.xpath_searcher.core.listener.internal.WhitespaceControlPoint;
-import com.xzymon.xpath_searcher.core.parsing.AttributeRepresentation;
-import com.xzymon.xpath_searcher.core.parsing.ErrorRepresentation;
-import com.xzymon.xpath_searcher.core.parsing.SliceInterior;
-import com.xzymon.xpath_searcher.core.parsing.SliceRepresentation;
 
-public class Slicer {
-	private static final Logger logger = LoggerFactory.getLogger(Slicer.class.getName());
+public class HalfElementsParser {
+	private static final Logger logger = LoggerFactory.getLogger(HalfElementsParser.class.getName());
 	
 	private char[] savedChars = null;
-	private LinkedList<SlicerMode> modeList = null;
+	private LinkedList<DetectorMode> modeList = null;
 	private LinkedList<ControlPoint> controlPoints = null;
-	private LinkedList<SliceRepresentation> slicesR = null;
+	private LinkedList<HalfElementRepresentation> slicesR = null;
 	
-	private List<SlicingListener> slicingListeners;
+	private List<ParserListener> parserListeners;
 	
-	public Slicer(InputStream is) throws SlicingException{
+	public HalfElementsParser(InputStream is) throws ParserException{
 		try{
 			int avail = is.available();
 			if(avail>0){
@@ -55,7 +50,7 @@ public class Slicer {
 				int read = reader.read(charBuf);
 				savedChars = new char[read];
 				System.arraycopy(charBuf, 0, savedChars, 0, read);
-				slice();
+				parse();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -64,22 +59,22 @@ public class Slicer {
 		}
 	}
 	
-	public Slicer(byte[] savedStream) throws IOException, SlicingException{
+	public HalfElementsParser(byte[] savedStream) throws IOException, ParserException{
 		ByteArrayInputStream bais = new ByteArrayInputStream(savedStream);
 		InputStreamReader reader = new InputStreamReader(bais);
 		char[] charBuf = new char[savedStream.length];
 		int read = reader.read(charBuf);
 		savedChars = new char[read];
 		System.arraycopy(charBuf, 0, savedChars, 0, read);
-		slice();
+		parse();
 	}
 	
-	public Slicer(char[] chars) throws SlicingException{
+	public HalfElementsParser(char[] chars) throws ParserException{
 		this.savedChars = chars;
-		slice();
+		parse();
 	}
 	
-	private void slice() throws SlicingException{
+	private void parse() throws ParserException{
 		findControlPoints();
 		getSlices();
 	}
@@ -90,52 +85,53 @@ public class Slicer {
 		
 		int gapStart=-1, gapEnd=-1;
 		int slashPos;
+		int endPos;
 		
-		for(SliceRepresentation sliceR: slicesR){
+		for(HalfElementRepresentation sliceR: slicesR){
 			logger.debug(sliceR.toString());
 			
 			//TODO: here
 			if(sliceR.isRaw()){
-				for(SlicingListener sl : slicingListeners){
-					sl.rawText(sliceR.getStartPosition(), sliceR.getEndPosition());
+				for(ParserListener pl : parserListeners){
+					pl.rawText(sliceR.getStartPosition(), sliceR.getEndPosition());
 				}
 			} else if(sliceR.isOther()){
-				for(SlicingListener sl : slicingListeners){
-					sl.otherTag(sliceR.getStartPosition(), sliceR.getEndPosition());
+				for(ParserListener pl : parserListeners){
+					pl.otherTag(sliceR.getStartPosition(), sliceR.getEndPosition());
 				}
 			} else {
-				for(SlicingListener sl : slicingListeners){
-					sl.lessThanStartChar(sliceR.getStartPosition());
+				for(ParserListener pl : parserListeners){
+					pl.lessThanStartChar(sliceR.getStartPosition());
 				}
 				if(sliceR.isClosing()){
-					for(SlicingListener sl : slicingListeners){
-						sl.closingSlash(sliceR.getClosingSlashPosition());
+					for(ParserListener pl : parserListeners){
+						pl.closingSlash(sliceR.getClosingSlashPosition());
 					}
 				}
-				for(SlicingListener sl : slicingListeners){
-					sl.tagName(sliceR.getNameStartPosition(), sliceR.getNameEndPosition());
+				for(ParserListener pl : parserListeners){
+					pl.tagName(sliceR.getNameStartPosition(), sliceR.getNameEndPosition());
 				}
 				gapStart = sliceR.getNameEndPosition()+1;
 				if(sliceR.getInterior()!=null){
-					for(SliceInterior sInt : sliceR.getInterior()){
+					for(ElementInterior sInt : sliceR.getInterior()){
 						gapEnd = sInt.getStartPosition()-1;
 						if(gapEnd>=gapStart){
-							for(SlicingListener sl : slicingListeners){
-								sl.tagGap(gapStart, gapEnd);
+							for(ParserListener pl : parserListeners){
+								pl.tagGap(gapStart, gapEnd);
 							}
 						}
 						if(sInt instanceof AttributeRepresentation){
 							attr = (AttributeRepresentation) sInt;
-							for(SlicingListener sl : slicingListeners){
-								sl.attributeName(attr.getStartsAt(), attr.getNameEndsAt());
-								sl.attributeEqualsSign(attr.getEqualsSignAt());
-								sl.attributeValue(attr.getStartQuotationMarkAt(), attr.getEndQuotationMarkAt());
+							for(ParserListener pl : parserListeners){
+								pl.attributeName(attr.getStartsAt(), attr.getNameEndsAt());
+								pl.attributeEqualsSign(attr.getEqualsSignAt());
+								pl.attributeValue(attr.getStartQuotationMarkAt(), attr.getEndQuotationMarkAt());
 							}
 						}
 						if(sInt instanceof ErrorRepresentation){
 							error = (ErrorRepresentation) sInt;
-							for(SlicingListener sl : slicingListeners){
-								sl.error(error.getStartPosition(), error.getEndPosition());
+							for(ParserListener pl : parserListeners){
+								pl.error(error.getStartPosition(), error.getEndPosition());
 							}
 						}
 						gapStart = sInt.getEndPosition()+1;
@@ -145,38 +141,48 @@ public class Slicer {
 				if(sliceR.isSelfClosing()){
 					slashPos = sliceR.getClosingSlashPosition();
 					if(slashPos>gapStart){
-						for(SlicingListener sl : slicingListeners){
-							sl.tagGap(gapStart, slashPos-1);
+						for(ParserListener pl : parserListeners){
+							pl.tagGap(gapStart, slashPos-1);
 						}
 						gapStart = slashPos+1;
 					}
-					for(SlicingListener sl : slicingListeners){
-						sl.closingSlash(sliceR.getClosingSlashPosition());
+					for(ParserListener pl : parserListeners){
+						pl.closingSlash(sliceR.getClosingSlashPosition());
 					}
 				}
-				for(SlicingListener sl : slicingListeners){
-					sl.greaterThanEndingChar(sliceR.getEndPosition());
+				//
+				else {
+					endPos = sliceR.getEndPosition();
+					if(endPos>gapStart){
+						for(ParserListener pl : parserListeners){
+							pl.tagGap(gapStart, endPos-1);
+						}
+					}
+				}
+				//
+				for(ParserListener pl : parserListeners){
+					pl.greaterThanEndingChar(sliceR.getEndPosition());
 				}
 			}
 		}
 	}
 	
-	public SlicedNode buildStructure() throws BuildingNodeStructureException{
-		return SlicedNode.buildStructure(slicesR, savedChars);
+	public NodeRepresentation buildStructure() throws BuildingDOMException{
+		return NodeRepresentation.buildStructure(slicesR, savedChars);
 	}
 	
-	private List<SliceRepresentation> getSlices() throws SlicingException{
-		modeList = new LinkedList<SlicerMode>();
+	private List<HalfElementRepresentation> getSlices() throws ParserException{
+		modeList = new LinkedList<DetectorMode>();
 		
-		SliceRepresentation curSlice = null;
+		HalfElementRepresentation curSlice = null;
 		AttributeRepresentation curAttr = null;
 		ErrorRepresentation curError = null;
-		slicesR = new LinkedList<SliceRepresentation>();
+		slicesR = new LinkedList<HalfElementRepresentation>();
 		
 		boolean reinvoke = false;
 		boolean dropAttr = false;
 		
-		modeList.addLast(SlicerMode.NONE);
+		modeList.addLast(DetectorMode.NONE);
 				
 		//findControlPoints();
 		int cplength = controlPoints.size();
@@ -184,7 +190,7 @@ public class Slicer {
 		ControlPoint pre_cp = null;
 		// for bo trzeba się odwoływać do poprzednich/następnych elementów listy
 		for(int cploop=0; cploop<cplength; cploop++){
-			if(modeList.getLast()==SlicerMode.ERROR){
+			if(modeList.getLast()==DetectorMode.ERROR){
 				logger.info(String.format("error detected at %1$d on char=%2$d ['%3$s']", cp.getPosition(), (int)cp.getChar(), cp.getChar()));
 			}
 			pre_cp = cp;
@@ -198,15 +204,15 @@ public class Slicer {
 				switch(modeList.getLast()){
 				case NONE:
 					insertRawSlice(cp);
-					curSlice = new SliceRepresentation();
+					curSlice = new HalfElementRepresentation();
 					curSlice.setStartPosition(cp.getPosition());
 					slicesR.addLast(curSlice);
-					modeList.addLast(SlicerMode.INSIDE_SLICE);
+					modeList.addLast(DetectorMode.INSIDE_HALF_ELEMENT);
 					break;
-				case INSIDE_SLICE:
+				case INSIDE_HALF_ELEMENT:
 					curError = new ErrorRepresentation();
 					curError.setStartPosition(cp.getPosition());
-					modeList.addLast(SlicerMode.ERROR);
+					modeList.addLast(DetectorMode.ERROR);
 					break;
 				default:
 					break;	
@@ -227,7 +233,7 @@ public class Slicer {
 						modeList.removeLast();
 						reinvoke = true;
 						break;
-					case INSIDE_SLICE:
+					case INSIDE_HALF_ELEMENT:
 						if(pre_cp.getChar()=='/' && pre_cp.getPosition()==cp.getPosition()-1){
 							if(curSlice.getClosingSlashPosition()==-1){
 								curSlice.setClosingSlashPosition(pre_cp.getPosition());
@@ -260,8 +266,8 @@ public class Slicer {
 						case NONE:
 							//modeList.addLast(SlicerMode.INSIDE_DOUBLE_QUOTES);
 							break;
-						case INSIDE_SLICE:
-							modeList.addLast(SlicerMode.INSIDE_DOUBLE_QUOTES);
+						case INSIDE_HALF_ELEMENT:
+							modeList.addLast(DetectorMode.INSIDE_DOUBLE_QUOTES);
 							break;
 						case INSIDE_DOUBLE_QUOTES:
 							// wycofaj tryb
@@ -281,7 +287,7 @@ public class Slicer {
 								dropAttr = false;
 							} else {
 								if(pre_cp!=null && pre_cp.getChar()=='=' && pre_cp.getPosition()==cp.getPosition()-1){
-									modeList.addLast(SlicerMode.INSIDE_DOUBLE_QUOTES);
+									modeList.addLast(DetectorMode.INSIDE_DOUBLE_QUOTES);
 									curAttr.setDoubleQuoted(true);
 									curAttr.setStartQuotationMarkAt(cp.getPosition());
 								}
@@ -301,8 +307,8 @@ public class Slicer {
 						case NONE:
 							//modeList.addLast(SlicerMode.INSIDE_SINGLE_QUOTES);
 							break;
-						case INSIDE_SLICE:
-							modeList.addLast(SlicerMode.INSIDE_SINGLE_QUOTES);
+						case INSIDE_HALF_ELEMENT:
+							modeList.addLast(DetectorMode.INSIDE_SINGLE_QUOTES);
 							break;
 						case INSIDE_SINGLE_QUOTES:
 							// wycofaj tryb
@@ -322,7 +328,7 @@ public class Slicer {
 								dropAttr = false;
 							} else {
 								if(pre_cp!=null && pre_cp.getChar()=='=' && pre_cp.getPosition()==cp.getPosition()-1){
-									modeList.addLast(SlicerMode.INSIDE_DOUBLE_QUOTES);
+									modeList.addLast(DetectorMode.INSIDE_DOUBLE_QUOTES);
 									curAttr.setSingleQuoted(true);
 									curAttr.setStartQuotationMarkAt(cp.getPosition());
 								}
@@ -346,7 +352,7 @@ public class Slicer {
 							break;
 						// sprawdzenie czy to ma jakiekolwiek znaczenie - jedynie w INSIDE_SLICE
 						// sprawdzanie tylko wstecz - więc do sprawdzenia tylko jedna opcja
-						case INSIDE_SLICE:
+						case INSIDE_HALF_ELEMENT:
 							if(pre_cp.getPosition()==cp.getPosition()-1 && pre_cp.getChar()=='<'){
 								if(curSlice.getClosingSlashPosition()==-1){
 									curSlice.setClosingSlashPosition(cp.getPosition());
@@ -368,9 +374,9 @@ public class Slicer {
 				if(curSlice!=null && !curSlice.isOther()){
 					// powinno mieć znaczenie tylko przy INSIDE_ATTRIBUTE
 					// jeśli poprzedni znak na liście jest whitespace i nie jest bezpośrednio poprzedni to  włącz tryb INSIDE_ATTRIBUTE
-					if(modeList.getLast().equals(SlicerMode.INSIDE_SLICE)){
+					if(modeList.getLast().equals(DetectorMode.INSIDE_HALF_ELEMENT)){
 						if(pre_cp!=null && pre_cp instanceof WhitespaceControlPoint && pre_cp.getPosition()<cp.getPosition()-1){
-							modeList.addLast(SlicerMode.INSIDE_ATTRIBUTE);
+							modeList.addLast(DetectorMode.INSIDE_ATTRIBUTE);
 							curAttr = new AttributeRepresentation();
 							curAttr.setStartsAt(pre_cp.getPosition()+1);
 							curAttr.setNameEndsAt(cp.getPosition()-1);
@@ -401,7 +407,7 @@ public class Slicer {
 							curSlice.addInterior(curError);
 							reinvoke = true;
 							break;
-						case INSIDE_SLICE:
+						case INSIDE_HALF_ELEMENT:
 							if(pre_cp.getPosition()<cp.getPosition()-1 && ((pre_cp.getChar()=='<' /*&& curSlice.getStartPosition()!=pre_cp.getPosition()*/) || pre_cp.getChar()=='/')){
 								curSlice.setNameStartPosition(pre_cp.getPosition()+1);
 								curSlice.setNameEndPosition(cp.getPosition()-1);
@@ -450,11 +456,11 @@ public class Slicer {
 							curAttr = null;
 							curSlice.addError(curError);
 							curSlice.addInterior(curError);
-							modeList.addLast(SlicerMode.ERROR);
+							modeList.addLast(DetectorMode.ERROR);
 							reinvoke = true;
 							break;
 						// ma znaczenie dla deklaracji XML lub kodu php - gdy poprzedza go <
-						case INSIDE_SLICE:
+						case INSIDE_HALF_ELEMENT:
 							if(pre_cp.getPosition()==cp.getPosition()-1 && pre_cp.getChar()=='<'){
 								curSlice.setOther(true);
 							}
@@ -473,7 +479,7 @@ public class Slicer {
 			case '!':
 				if(curSlice!=null && !curSlice.isOther()){
 					// ma znaczenie tylko dla deklaracji DTD - gdy poprzedza go <
-					if(modeList.getLast().equals(SlicerMode.INSIDE_SLICE)){
+					if(modeList.getLast().equals(DetectorMode.INSIDE_HALF_ELEMENT)){
 						if(pre_cp.getPosition()==cp.getPosition()-1 && pre_cp.getChar()=='<'){
 							logger.info("detecting slice of type \"other\"");
 							curSlice.setOther(true);
@@ -548,7 +554,7 @@ public class Slicer {
 		int justAfterEnding = 0;
 		// justBeforeBegining is before this Slice
 		int justBeforeBegining = -1;
-		SliceRepresentation rawSlice = null;
+		HalfElementRepresentation rawSlice = null;
 		
 		justBeforeBegining = cp.getPosition()-1;
 		if(justAfterEnding<=justBeforeBegining && justBeforeBegining>-1){
@@ -556,7 +562,7 @@ public class Slicer {
 				justAfterEnding=slicesR.getLast().getEndPosition()+1;
 			} 
 			if(justBeforeBegining>=justAfterEnding){
-				rawSlice = new SliceRepresentation();
+				rawSlice = new HalfElementRepresentation();
 				rawSlice.setRaw(true);
 				rawSlice.setStartPosition(justAfterEnding);
 				rawSlice.setEndPosition(justBeforeBegining);
@@ -572,8 +578,8 @@ public class Slicer {
 	public void setSavedChars(char[] chars) {
 		try {
 			this.savedChars = chars;
-			slice();
-		} catch (SlicingException e) {
+			parse();
+		} catch (ParserException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -594,26 +600,26 @@ public class Slicer {
 		return result;
 	}
 
-	public List<SlicingListener> getSlicingListeners(){
-		return this.slicingListeners;
+	public List<ParserListener> getParserListeners(){
+		return this.parserListeners;
 	}
 	
-	public void addSlicingListener(SlicingListener listener){
-		if(slicingListeners==null){
-			slicingListeners = new LinkedList<SlicingListener>();
+	public void addParserListener(ParserListener listener){
+		if(parserListeners==null){
+			parserListeners = new LinkedList<ParserListener>();
 		}
-		if(!slicingListeners.contains(listener)){
-			slicingListeners.add(listener);
-		}
-	}
-	
-	public void removeSlicingListener(SlicingListener listener){
-		if(slicingListeners!=null){
-			slicingListeners.remove(listener);
+		if(!parserListeners.contains(listener)){
+			parserListeners.add(listener);
 		}
 	}
 	
-	private ControlPoint regainError(ControlPoint cp, ErrorRepresentation curError, SliceRepresentation curSlice){
+	public void removeParserListener(ParserListener listener){
+		if(parserListeners!=null){
+			parserListeners.remove(listener);
+		}
+	}
+	
+	private ControlPoint regainError(ControlPoint cp, ErrorRepresentation curError, HalfElementRepresentation curSlice){
 		logger.info(String.format("regaining error at %1$d on char=%2$d ['%3$s']", cp.getPosition(), (int)cp.getChar(), cp.getChar()));
 		curError.setEndPosition(cp.getPosition()-1);
 		curSlice.addError(curError);
@@ -627,4 +633,7 @@ public class Slicer {
 		}
 	}
 	
+	enum DetectorMode {
+		NONE, INSIDE_HALF_ELEMENT, INSIDE_DOUBLE_QUOTES, INSIDE_SINGLE_QUOTES, INSIDE_ATTRIBUTE, ERROR, REGAIN_ERROR
+	}
 }

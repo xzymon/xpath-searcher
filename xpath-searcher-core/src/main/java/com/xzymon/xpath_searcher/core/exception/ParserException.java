@@ -2,11 +2,11 @@ package com.xzymon.xpath_searcher.core.exception;
 
 import com.xzymon.xpath_searcher.core.listener.internal.ControlPoint;
 
-public class SlicingException extends Exception {
+public class ParserException extends Exception {
 	private static final long serialVersionUID = -2832820851192457719L;
 	private ControlPoint cp;
 	
-	public SlicingException(ControlPoint cp){
+	public ParserException(ControlPoint cp){
 		this.cp = cp;
 	}
 

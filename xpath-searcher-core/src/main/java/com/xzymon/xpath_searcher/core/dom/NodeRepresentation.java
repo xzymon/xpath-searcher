@@ -8,25 +8,25 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.xzymon.xpath_searcher.core.exception.BuildingNodeStructureException;
+import com.xzymon.xpath_searcher.core.exception.BuildingDOMException;
 import com.xzymon.xpath_searcher.core.exception.IsNotOpeningSliceRepresentationException;
-import com.xzymon.xpath_searcher.core.parsing.AttributeRepresentation;
-import com.xzymon.xpath_searcher.core.parsing.SliceRepresentation;
+import com.xzymon.xpath_searcher.core.parser.AttributeRepresentation;
+import com.xzymon.xpath_searcher.core.parser.HalfElementRepresentation;
 
-public class SlicedNode {
-	private static final Logger logger = LoggerFactory.getLogger(SlicedNode.class.getName());
+public class NodeRepresentation {
+	private static final Logger logger = LoggerFactory.getLogger(NodeRepresentation.class.getName());
 	
 	private String name;
 	private String uniqueLocation;
 	
-	private SliceRepresentation openingSlice;
-	private SliceRepresentation closingSlice;
+	private HalfElementRepresentation openingSlice;
+	private HalfElementRepresentation closingSlice;
 	
-	private SlicedNode parent;
-	private List<SlicedNode> children;
+	private NodeRepresentation parent;
+	private List<NodeRepresentation> children;
 	
 	
-	private SlicedNode(SliceRepresentation openingSlice, SlicedNode parent, String name) throws IsNotOpeningSliceRepresentationException{
+	private NodeRepresentation(HalfElementRepresentation openingSlice, NodeRepresentation parent, String name) throws IsNotOpeningSliceRepresentationException{
 		this.name = name;
 		this.parent = parent;
 		if(openingSlice!=null && openingSlice.isOpening()){
@@ -36,25 +36,25 @@ public class SlicedNode {
 		}
 	}
 	
-	public static SlicedNode buildStructure(List<SliceRepresentation> slices, char[] chars) throws BuildingNodeStructureException{
-		SlicedNode result = null;
+	public static NodeRepresentation buildStructure(List<HalfElementRepresentation> slices, char[] chars) throws BuildingDOMException{
+		NodeRepresentation result = null;
 		if(slices!=null && slices.size()!=0){
 			int sloop = -1;
-			SliceRepresentation curSlice = null;
-			SlicedNode curNode = null;
-			SlicedNode parentNode = null;
+			HalfElementRepresentation curSlice = null;
+			NodeRepresentation curNode = null;
+			NodeRepresentation parentNode = null;
 			String extractedName = null;
 			String previousParentName = null;
-			Iterator<SliceRepresentation> slIt = slices.iterator();
+			Iterator<HalfElementRepresentation> slIt = slices.iterator();
 			while(slIt.hasNext()){
 				curSlice = slIt.next();
 				sloop++;
 				if(!curSlice.isOther() && !curSlice.isRaw()){
-					extractedName = SlicedNode.extractName(chars, curSlice.getNameStartPosition(), curSlice.getNameEndPosition());
+					extractedName = NodeRepresentation.extractName(chars, curSlice.getNameStartPosition(), curSlice.getNameEndPosition());
 					if(curNode==null){
 						//to musi być root
 						logger.info(String.format("Attempt to create root node from SR at %1$d, with name: \"%2$s\"", sloop, extractedName));
-						curNode = new SlicedNode(curSlice, null, extractedName);
+						curNode = new NodeRepresentation(curSlice, null, extractedName);
 						result = curNode;
 						parentNode = result;
 						logger.info(String.format("Root node created from SR at %1$d, with name: \"%2$s\"", sloop, extractedName));
@@ -68,18 +68,18 @@ public class SlicedNode {
 								logger.info(String.format("Closing slice found at %1$d, with name: \"%2$s\"", sloop, extractedName));
 								logger.info(String.format("Moving up, to parent node with name: \"%1$s\"", previousParentName));
 							} else {
-								throw new BuildingNodeStructureException("list position is " + sloop);
+								throw new BuildingDOMException("list position is " + sloop);
 							}
 							continue;
 						}
 						if(curSlice.isSelfClosing()){
-							curNode = new SlicedNode(curSlice, parentNode, extractedName);
+							curNode = new NodeRepresentation(curSlice, parentNode, extractedName);
 							parentNode.addChild(curNode);
 							logger.info(String.format("Self-closing slice found at %1$d, with name: \"%2$s\"", sloop, extractedName));
 							continue;
 						}
 						if(curSlice.isOpening()){
-							curNode = new SlicedNode(curSlice, parentNode, extractedName);
+							curNode = new NodeRepresentation(curSlice, parentNode, extractedName);
 							parentNode.addChild(curNode);
 							parentNode = curNode;
 							logger.info(String.format("New opening slice found at %1$d, with name: \"%2$s\"", sloop, extractedName));
@@ -109,34 +109,34 @@ public class SlicedNode {
 	public void setUniqueLocation(String uniqueLocation) {
 		this.uniqueLocation = uniqueLocation;
 	}
-	public SliceRepresentation getOpeningSlice() {
+	public HalfElementRepresentation getOpeningSlice() {
 		return openingSlice;
 	}
-	public void setOpeningSlice(SliceRepresentation openingSlice) {
+	public void setOpeningSlice(HalfElementRepresentation openingSlice) {
 		this.openingSlice = openingSlice;
 	}
-	public SliceRepresentation getClosingSlice() {
+	public HalfElementRepresentation getClosingSlice() {
 		return closingSlice;
 	}
-	public void setClosingSlice(SliceRepresentation closingSlice) {
+	public void setClosingSlice(HalfElementRepresentation closingSlice) {
 		this.closingSlice = closingSlice;
 	}
-	public SlicedNode getParent() {
+	public NodeRepresentation getParent() {
 		return parent;
 	}
-	public void setParent(SlicedNode parent) {
+	public void setParent(NodeRepresentation parent) {
 		this.parent = parent;
 	}
-	public List<SlicedNode> getChildren() {
+	public List<NodeRepresentation> getChildren() {
 		return children;
 	}
-	public void setChildren(List<SlicedNode> children) {
+	public void setChildren(List<NodeRepresentation> children) {
 		this.children = children;
 	}
-	public void addChild(SlicedNode childNode){
+	public void addChild(NodeRepresentation childNode){
 		if(childNode!=null){
 			if(this.children==null){
-				this.children = new ArrayList<SlicedNode>();
+				this.children = new ArrayList<NodeRepresentation>();
 			}
 			this.children.add(childNode);
 		}
@@ -159,11 +159,11 @@ public class SlicedNode {
 		return new SlicedNodeIterator(this);
 	}
 	
-	public class SlicedNodeIterator implements Iterator<SlicedNode>{
-		private SlicedNode nextNode = null;
-		private LinkedList<Iterator<SlicedNode>> itStack = new LinkedList<Iterator<SlicedNode>>();
+	public class SlicedNodeIterator implements Iterator<NodeRepresentation>{
+		private NodeRepresentation nextNode = null;
+		private LinkedList<Iterator<NodeRepresentation>> itStack = new LinkedList<Iterator<NodeRepresentation>>();
 		
-		public SlicedNodeIterator(SlicedNode creator) {
+		public SlicedNodeIterator(NodeRepresentation creator) {
 			this.nextNode = creator;
 		}
 		
@@ -171,9 +171,9 @@ public class SlicedNode {
 			return nextNode!=null;
 		}
 
-		public SlicedNode next() {
-			SlicedNode result = nextNode;
-			Iterator<SlicedNode> listIt = null;
+		public NodeRepresentation next() {
+			NodeRepresentation result = nextNode;
+			Iterator<NodeRepresentation> listIt = null;
 			//ustalanie następcy węzła do zwrócenia
 			//poszukiwanie wśród węzłów potomnych
 			if(nextNode.hasChildren()){

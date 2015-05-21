@@ -1,7 +1,7 @@
-package com.xzymon.xpath_searcher.gui.stain.handlers;
+package com.xzymon.xpath_searcher.core.parser;
 
-public class AttributeRepresentation implements SliceInterior {
-	private SliceRepresentation owner;
+public class AttributeRepresentation implements ElementInterior {
+	private HalfElementRepresentation owner;
 	private String name = null;
 	private int startsAt = -1;
 	private int nameEndsAt = -1;
@@ -12,11 +12,10 @@ public class AttributeRepresentation implements SliceInterior {
 	private boolean singleQuoted = false;
 	private boolean doubleQuoted = false;
 	
-	@Override
 	public int getStartPosition() {
 		return startsAt;
 	}
-	@Override
+
 	public int getEndPosition() {
 		return endQuotationMarkAt;
 	}
@@ -30,7 +29,7 @@ public class AttributeRepresentation implements SliceInterior {
 		}
 		return -1;
 	}
-	public void setOwner(SliceRepresentation slice) {
+	public void setOwner(HalfElementRepresentation slice) {
 		this.owner = slice;
 	}
 	public int getStartsAt() {

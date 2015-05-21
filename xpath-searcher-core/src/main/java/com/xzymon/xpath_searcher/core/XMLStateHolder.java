@@ -17,31 +17,31 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.xzymon.xpath_searcher.core.decomposition.Slicer;
-import com.xzymon.xpath_searcher.core.dom.SlicedNode;
-import com.xzymon.xpath_searcher.core.exception.BuildingNodeStructureException;
-import com.xzymon.xpath_searcher.core.exception.SlicingException;
-import com.xzymon.xpath_searcher.core.listener.ParsingListener;
-import com.xzymon.xpath_searcher.core.listener.SlicingListener;
+import com.xzymon.xpath_searcher.core.dom.NodeRepresentation;
+import com.xzymon.xpath_searcher.core.exception.BuildingDOMException;
+import com.xzymon.xpath_searcher.core.exception.ParserException;
+import com.xzymon.xpath_searcher.core.listener.BindingListener;
+import com.xzymon.xpath_searcher.core.listener.ParserListener;
 import com.xzymon.xpath_searcher.core.listener.XPathSearchingListener;
-import com.xzymon.xpath_searcher.core.parsing.AttributeRepresentation;
+import com.xzymon.xpath_searcher.core.parser.AttributeRepresentation;
+import com.xzymon.xpath_searcher.core.parser.HalfElementsParser;
 
 public class XMLStateHolder implements StateHolder{
 	private static final Logger logger = LoggerFactory.getLogger(XMLStateHolder.class.getName());
 	
 	private char[] savedChars;
-	private Map<Node, SlicedNode> elementsMap = null;
+	private Map<Node, NodeRepresentation> elementsMap = null;
 	private Map<Node, AttributeRepresentation> attributesMap = null;
 	private XPathProcessor engine = null;
-	private Slicer slicer = null;
+	private HalfElementsParser parser = null;
 	private boolean empty;
 	
-	private List<ParsingListener> parsingListeners;
+	private List<BindingListener> bindingListeners;
 	
-	public XMLStateHolder(InputStream is, List<ParsingListener> parsingListenersList) throws SlicingException{
+	public XMLStateHolder(InputStream is, List<BindingListener> parsingListenersList) throws ParserException{
 		empty = true;
 		try{
-			this.parsingListeners = parsingListenersList;
+			this.bindingListeners = parsingListenersList;
 			int avail = is.available();
 			if(avail>0){
 				byte[] savedStream = new byte[avail];
@@ -52,11 +52,11 @@ public class XMLStateHolder implements StateHolder{
 				int read = reader.read(charBuf);
 				savedChars = new char[read];
 				System.arraycopy(charBuf, 0, savedChars, 0, read);
-				slicer = new Slicer(savedChars);
-				engine = new XPathProcessor(new ByteArrayInputStream(savedStream), parsingListeners);
+				parser = new HalfElementsParser(savedChars);
+				engine = new XPathProcessor(new ByteArrayInputStream(savedStream), bindingListeners);
 				int boundElements = bindElementsToText();
 				int boundAttributes = bindAttributesToText();
-				for(ParsingListener pl : parsingListeners){
+				for(BindingListener pl : bindingListeners){
 					pl.nodesBound(boundElements, boundAttributes);
 				}
 				empty = false;
@@ -102,7 +102,7 @@ public class XMLStateHolder implements StateHolder{
 		return engine.getAllFoundNodes();
 	}
 	
-	public SlicedNode getBoundSlicedNode(Node node){
+	public NodeRepresentation getBoundSlicedNode(Node node){
 		return elementsMap.get(node);
 	}
 	
@@ -110,20 +110,20 @@ public class XMLStateHolder implements StateHolder{
 		return attributesMap.get(node);
 	}
 	
-	public void invokeSlicerListeners(){
-		slicer.invokeListeners();
+	public void invokeParserListeners(){
+		parser.invokeListeners();
 	}
 	
-	public List<SlicingListener> getSlicingListeners(){
-		return slicer.getSlicingListeners();
+	public List<ParserListener> getParserListeners(){
+		return parser.getParserListeners();
 	}
 	
-	public void addSlicingListener(SlicingListener listener){
-		slicer.addSlicingListener(listener);
+	public void addParserListener(ParserListener listener){
+		parser.addParserListener(listener);
 	}
 	
-	public void removeSlicingListener(SlicingListener listener){
-		slicer.removeSlicingListener(listener);
+	public void removeParserListener(ParserListener listener){
+		parser.removeParserListener(listener);
 	}
 	
 	public List<XPathSearchingListener> getSearchingListeners() {
@@ -141,13 +141,13 @@ public class XMLStateHolder implements StateHolder{
 	private int bindElementsToText(){
 		int boundElements = 0;
 		Node xPathNode = null;
-		SlicedNode slicedNode = null;
-		elementsMap = new HashMap<Node, SlicedNode>();
+		NodeRepresentation slicedNode = null;
+		elementsMap = new HashMap<Node, NodeRepresentation>();
 		try {
 			engine.findNodes("//*");
 			NodeList nodeList = engine.getAllFoundNodes();
-			SlicedNode rootSlicedNode = slicer.buildStructure();
-			SlicedNode.SlicedNodeIterator snIt = rootSlicedNode.iterator();
+			NodeRepresentation rootSlicedNode = parser.buildStructure();
+			NodeRepresentation.SlicedNodeIterator snIt = rootSlicedNode.iterator();
 			for(int nodeLoop=0; nodeLoop<nodeList.getLength(); nodeLoop++){
 				xPathNode = nodeList.item(nodeLoop);
 				if(snIt.hasNext()){
@@ -164,7 +164,7 @@ public class XMLStateHolder implements StateHolder{
 		} catch (XPathExpressionException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (BuildingNodeStructureException e) {
+		} catch (BuildingDOMException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -174,7 +174,7 @@ public class XMLStateHolder implements StateHolder{
 	private int bindAttributesToText(){
 		int boundAttributes = 0;
 		Node xPathNode = null;
-		SlicedNode slicedNode = null;
+		NodeRepresentation slicedNode = null;
 		attributesMap = new HashMap<Node, AttributeRepresentation>();
 		Iterator<AttributeRepresentation> attrIt = null;
 		int attrCount;
@@ -183,8 +183,8 @@ public class XMLStateHolder implements StateHolder{
 		try {
 			engine.findNodes("//*/@*");
 			NodeList nodeList = engine.getAllFoundNodes();
-			SlicedNode rootSlicedNode = slicer.buildStructure();
-			SlicedNode.SlicedNodeIterator snIt = rootSlicedNode.iterator();
+			NodeRepresentation rootSlicedNode = parser.buildStructure();
+			NodeRepresentation.SlicedNodeIterator snIt = rootSlicedNode.iterator();
 			for(int i=0; i<nodeList.getLength(); i++){
 				xPathNode = nodeList.item(i);
 				logger.info(String.format("xpath node(%1$d)=%2$s", i, xPathNode.getNodeName()));
@@ -223,7 +223,7 @@ public class XMLStateHolder implements StateHolder{
 		} catch (XPathExpressionException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (BuildingNodeStructureException e) {
+		} catch (BuildingDOMException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

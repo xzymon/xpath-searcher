@@ -4,23 +4,22 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.xzymon.xpath_searcher.core.decomposition.Slicer;
-import com.xzymon.xpath_searcher.core.exception.SlicingException;
-import com.xzymon.xpath_searcher.core.listener.XMLNamespacesRemoveSlicingListener;
+import com.xzymon.xpath_searcher.core.exception.ParserException;
+import com.xzymon.xpath_searcher.core.listener.XMLNamespacesRemoveParserListener;
+import com.xzymon.xpath_searcher.core.parser.HalfElementsParser;
 
 public class XMLStreamConverter {
-	private Slicer slicer;
+	private HalfElementsParser parser;
 	private byte[] resultStream;
 	
-	public XMLStreamConverter(InputStream is) throws IOException, SlicingException{
+	public XMLStreamConverter(InputStream is) throws IOException, ParserException{
 		int avail = is.available();
 		if(avail>0){
-			byte[] helpArray = new byte[avail];
-			slicer = new Slicer(is);
-			XMLNamespacesRemoveSlicingListener removeListener = new XMLNamespacesRemoveSlicingListener();
-			removeListener.setData(slicer.getSavedChars());
-			slicer.addSlicingListener(removeListener);
-			slicer.invokeListeners();
+			parser = new HalfElementsParser(is);
+			XMLNamespacesRemoveParserListener removeListener = new XMLNamespacesRemoveParserListener();
+			removeListener.setData(parser.getSavedChars());
+			parser.addParserListener(removeListener);
+			parser.invokeListeners();
 			String filtered = removeListener.getCollectedString();
 			resultStream = filtered.getBytes();
 		}

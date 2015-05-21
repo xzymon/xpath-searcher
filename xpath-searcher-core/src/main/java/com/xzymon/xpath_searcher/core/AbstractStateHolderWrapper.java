@@ -9,35 +9,35 @@ import javax.xml.xpath.XPathExpressionException;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.xzymon.xpath_searcher.core.dom.SlicedNode;
-import com.xzymon.xpath_searcher.core.listener.LoggingParsingListener;
-import com.xzymon.xpath_searcher.core.listener.ParsingListener;
+import com.xzymon.xpath_searcher.core.dom.NodeRepresentation;
+import com.xzymon.xpath_searcher.core.listener.LoggingBindingListener;
+import com.xzymon.xpath_searcher.core.listener.BindingListener;
 import com.xzymon.xpath_searcher.core.listener.XPathSearchingListener;
-import com.xzymon.xpath_searcher.core.parsing.AttributeRepresentation;
+import com.xzymon.xpath_searcher.core.parser.AttributeRepresentation;
 
-public class AbstractStateHolderWrapper implements StateHolder {
+public abstract class AbstractStateHolderWrapper implements StateHolder {
 	private XMLStateHolder stateHolder;
 	
-	private ParsingListener pl = null;
-	private List<ParsingListener> parsingListeners = null;
+	private BindingListener pl = null;
+	private List<BindingListener> bindingListeners = null;
 	
 	public AbstractStateHolderWrapper() {
 		init();
 	}
 	
 	private void init(){
-		parsingListeners = new LinkedList<ParsingListener>();
-		pl = new LoggingParsingListener();
-		parsingListeners.add(pl);
+		bindingListeners = new LinkedList<BindingListener>();
+		pl = new LoggingBindingListener();
+		bindingListeners.add(pl);
 	}
 	
 	public boolean loadStream(InputStream is) {
 		boolean result = false;
 		try{
-			stateHolder = new XMLStateHolder(is, parsingListeners);
-			stateHolder.invokeSlicerListeners();
+			stateHolder = new XMLStateHolder(is, bindingListeners);
+			stateHolder.invokeParserListeners();
 			result = true;
-		} catch (com.xzymon.xpath_searcher.core.exception.SlicingException e) {
+		} catch (com.xzymon.xpath_searcher.core.exception.ParserException e) {
 			e.printStackTrace();
 		} finally {
 			
@@ -71,7 +71,7 @@ public class AbstractStateHolderWrapper implements StateHolder {
 		return stateHolder.getFoundNodeList();
 	}
 	
-	public SlicedNode getBoundSlicedNode(Node node){
+	public NodeRepresentation getBoundSlicedNode(Node node){
 		return stateHolder.getBoundSlicedNode(node);
 	}
 	

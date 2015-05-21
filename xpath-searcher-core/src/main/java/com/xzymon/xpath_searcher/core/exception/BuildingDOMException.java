@@ -1,9 +1,9 @@
 package com.xzymon.xpath_searcher.core.exception;
 
-public class BuildingNodeStructureException extends Exception{
+public class BuildingDOMException extends Exception{
 	private static final long serialVersionUID = -1803132929693468902L;
 	
-	public BuildingNodeStructureException(String message) {
+	public BuildingDOMException(String message) {
 		super(message);
 	}
 

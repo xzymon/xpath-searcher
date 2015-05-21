@@ -1,14 +1,15 @@
 package com.xzymon.xpath_searcher.core.listener;
 
-public class XMLNamespacesRemoveSlicingListener implements SlicingListener {
+public class XMLNamespacesRemoveParserListener implements ParserListener {
 	private StringBuilder collector;
 	private char[] data;
 	
 	private String attrName = null;
 	private int nextEqualsSignToIgnore = -1;
 	private int nextAttributeValueToIgnore = -1;
+	private int gapToIgnore = -1;
 	
-	public XMLNamespacesRemoveSlicingListener(){
+	public XMLNamespacesRemoveParserListener(){
 		collector = new StringBuilder(4096);
 	}
 	
@@ -33,7 +34,9 @@ public class XMLNamespacesRemoveSlicingListener implements SlicingListener {
 	}
 
 	public void tagGap(int startPos, int lastPos) {
-		collector.append(data, startPos, lastPos-startPos+1);
+		if(startPos!=gapToIgnore){
+			collector.append(data, startPos, lastPos-startPos+1);
+		}
 	}
 
 	public void attributeName(int startPos, int lastPos) {
@@ -55,6 +58,8 @@ public class XMLNamespacesRemoveSlicingListener implements SlicingListener {
 	public void attributeValue(int startPos, int lastPos) {
 		if(startPos!=nextAttributeValueToIgnore){
 			collector.append(data, startPos, lastPos-startPos+1);
+		} else {
+			gapToIgnore = lastPos+1;
 		}
 	}
 

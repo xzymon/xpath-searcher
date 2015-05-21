@@ -20,14 +20,14 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import com.xzymon.xpath_searcher.core.listener.ParsingListener;
+import com.xzymon.xpath_searcher.core.listener.BindingListener;
 import com.xzymon.xpath_searcher.core.listener.XPathSearchingListener;
 
 public class XPathProcessor {
 	private static final Logger logger = LoggerFactory.getLogger(XPathProcessor.class.getName());
 	
 	private Document xmlDocument = null;
-	private List<ParsingListener> parsingListeners;
+	private List<BindingListener> bindingListeners;
 	private List<XPathSearchingListener> searchingListeners;
 	
 	private String expression = null;
@@ -35,8 +35,8 @@ public class XPathProcessor {
 	private int nextNodeId = -1;
 	private boolean endProcessed = false;
 	
-	public XPathProcessor(InputStream is, List<ParsingListener> parsingListenersList){
-		this.parsingListeners = parsingListenersList;
+	public XPathProcessor(InputStream is, List<BindingListener> bindingListenersList){
+		this.bindingListeners = bindingListenersList;
 		init(is);
 	}
 	
@@ -44,8 +44,8 @@ public class XPathProcessor {
 		return xmlDocument;
 	}
 
-	public List<ParsingListener> getParsingListeners() {
-		return parsingListeners;
+	public List<BindingListener> getBindingListeners() {
+		return bindingListeners;
 	}
 	
 	public List<XPathSearchingListener> getSearchingListeners() {
@@ -70,14 +70,8 @@ public class XPathProcessor {
 		DocumentBuilder builder = null;
 		try {
 			builder = builderFactory.newDocumentBuilder();
-			for(ParsingListener pl : parsingListeners){
-				pl.aboutToParseDocument();
-			}
 			logger.info(String.format("DocumentBuilder : namespaceAware=%1$s, validating=%2$s, xIncludeAware=%3$s", builder.isNamespaceAware(), builder.isValidating(), builder.isXIncludeAware()));
 			xmlDocument = builder.parse(is);
-			for(ParsingListener pl : parsingListeners){
-				pl.parsingFinished();
-			}
 		} catch (ParserConfigurationException e) {
 			e.printStackTrace();
 		} catch (SAXException e) {

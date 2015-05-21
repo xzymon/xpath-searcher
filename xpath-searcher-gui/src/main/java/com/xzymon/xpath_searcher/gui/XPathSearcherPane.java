@@ -1,6 +1,11 @@
 package com.xzymon.xpath_searcher.gui;
 
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -11,6 +16,9 @@ import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyledDocument;
 import javax.xml.xpath.XPathExpressionException;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
@@ -18,31 +26,34 @@ import org.w3c.dom.NodeList;
 
 import com.xzymon.xpath_searcher.core.StateHolder;
 import com.xzymon.xpath_searcher.core.XMLStateHolder;
-import com.xzymon.xpath_searcher.core.dom.SlicedNode;
-import com.xzymon.xpath_searcher.core.listener.LoggingParsingListener;
-import com.xzymon.xpath_searcher.core.listener.ParsingListener;
-import com.xzymon.xpath_searcher.core.listener.SlicingListener;
+import com.xzymon.xpath_searcher.core.converter.HTMLStreamConverter;
+import com.xzymon.xpath_searcher.core.converter.XMLStreamConverter;
+import com.xzymon.xpath_searcher.core.dom.NodeRepresentation;
+import com.xzymon.xpath_searcher.core.exception.ParserException;
+import com.xzymon.xpath_searcher.core.listener.LoggingBindingListener;
+import com.xzymon.xpath_searcher.core.listener.BindingListener;
+import com.xzymon.xpath_searcher.core.listener.ParserListener;
 import com.xzymon.xpath_searcher.core.listener.XPathSearchingListener;
-import com.xzymon.xpath_searcher.core.parsing.AttributeRepresentation;
-import com.xzymon.xpath_searcher.core.parsing.SliceRepresentation;
+import com.xzymon.xpath_searcher.core.parser.AttributeRepresentation;
+import com.xzymon.xpath_searcher.core.parser.HalfElementRepresentation;
 import com.xzymon.xpath_searcher.gui.stain.XmlStylePalette;
 
-public class JTextPaneWrapper extends JTextPane implements StateHolder, SlicingListener, XPathSearchingListener{
+public class XPathSearcherPane extends JTextPane implements StateHolder, ParserListener, XPathSearchingListener{
 	private static final long serialVersionUID = 3456655673318302723L;
-	private static final Logger logger = LoggerFactory.getLogger(JTextPaneWrapper.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger(XPathSearcherPane.class.getName());
 	
 	private boolean wrapState = true;
-	//private ImprovedSlicer slicer = null;
-	//private ProcessingHandler slicingHandler = null;
 	
 	private XMLStateHolder stateHolder;
 	
-	private ParsingListener pl = null;
-	private List<ParsingListener> parsingListeners = null;
+	private BindingListener bl = null;
+	private List<BindingListener> bindingListeners = null;
 	
 	private XmlStylePalette palette = null;
 	
-	public JTextPaneWrapper() {
+	private List<String> standardCssElementsToRemove;
+	
+	public XPathSearcherPane() {
 		super();
 		this.newDocument();
 		init();
@@ -53,26 +64,129 @@ public class JTextPaneWrapper extends JTextPane implements StateHolder, SlicingL
 		setAutoscrolls(true);
 		getImmutableXMLDocument().immutable();
 		
-		parsingListeners = new LinkedList<ParsingListener>();
-		pl = new LoggingParsingListener();
-		parsingListeners.add(pl);
+		bindingListeners = new LinkedList<BindingListener>();
+		bl = new LoggingBindingListener();
+		bindingListeners.add(bl);
+		
+		standardCssElementsToRemove = new ArrayList<String>();
+		standardCssElementsToRemove.add("head");
+		standardCssElementsToRemove.add("img");
+		standardCssElementsToRemove.add("input");
+		standardCssElementsToRemove.add("br");
+		standardCssElementsToRemove.add("area");
+		standardCssElementsToRemove.add("button");
+		standardCssElementsToRemove.add("script");
 	}
 	
 	public boolean loadStream(InputStream is) {
 		boolean result = false;
 		try{
 			newDocument();
-			stateHolder = new XMLStateHolder(is, parsingListeners);
-			stateHolder.addSlicingListener(this);
+			stateHolder = new XMLStateHolder(is, bindingListeners);
+			stateHolder.addParserListener(this);
 			stateHolder.addSearchingListener(this);
-			stateHolder.invokeSlicerListeners();
+			stateHolder.invokeParserListeners();
 			result = true;
-		} catch (com.xzymon.xpath_searcher.core.exception.SlicingException e) {
+		} catch (com.xzymon.xpath_searcher.core.exception.ParserException e) {
 			e.printStackTrace();
 		} finally {
 			
 		}
 		return result;
+	}
+	
+	public boolean loadXMLStream(InputStream is) {
+		boolean result = false;
+		InputStream filteredIs = null;
+		try{
+			XMLStreamConverter xmlConverter = new XMLStreamConverter(is);
+			filteredIs = xmlConverter.getConvertedStream();
+			loadStream(filteredIs);
+			result = true;
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		} catch (ParserException e1) {
+			e1.printStackTrace();
+		} finally {
+			if(filteredIs!=null){
+				try{
+					filteredIs.close();
+				} catch(IOException ex){
+					ex.printStackTrace();
+				}
+			}
+		}
+		return result;
+	}
+	
+	public boolean loadHTMLStream(InputStream is, List<String> cssElementsToRemove) {
+		boolean result = false;
+		InputStream filteredIs = null;
+		InputStream preparedIs = null;
+		
+		if(cssElementsToRemove!=null && cssElementsToRemove.size()>0){
+			standardCssElementsToRemove.addAll(cssElementsToRemove);
+		}
+		/*
+		cssElementsToRemove.add("div.footer1");
+		cssElementsToRemove.add("div.footer2");
+		cssElementsToRemove.add("div.footer3");
+		cssElementsToRemove.add("div.footer4");
+		//cssElementsToRemove.add("div.center");
+		cssElementsToRemove.add("div.askCookies");
+		cssElementsToRemove.add("div.hidden");
+		*/
+		
+		try{
+			HTMLStreamConverter htmlConverter = new HTMLStreamConverter(is);
+			filteredIs = htmlConverter.getConvertedStream();
+			preparedIs = prepareHtmlWithJsoup(filteredIs, standardCssElementsToRemove);
+			result = loadStream(preparedIs);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		} catch (ParserException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} finally {
+			if(filteredIs!=null){
+				try{
+					filteredIs.close();
+				} catch(IOException ex){
+					ex.printStackTrace();
+				}
+			}
+			if(preparedIs!=null){
+				try{
+					preparedIs.close();
+				} catch(IOException ex){
+					ex.printStackTrace();
+				}
+			}
+		}
+		return result;
+	}
+	
+	private InputStream prepareHtmlWithJsoup(InputStream srcStream, List<String> elementTypesToRemove) throws IOException{
+		InputStream resultStream = null;
+		int avail = srcStream.available();
+		if(avail>0){
+			byte[] bytes = new byte[avail];
+			srcStream.read(bytes);
+			String strSource = new String(bytes);
+			logger.info(String.format("parsing by Jsoup..."));
+			org.jsoup.nodes.Document parsedDoc = Jsoup.parse(strSource);
+			for(String typeName : elementTypesToRemove){
+				Elements els = parsedDoc.select(typeName);
+				for(Element el: els){
+					el.remove();
+				}
+			}
+			String fromHtml = parsedDoc.html();
+			String corrected = fromHtml.replaceAll("&nbsp;", "&#160;");
+			logger.info(String.format("html retrieved from Jsoup parsed document"));
+			resultStream = new ByteArrayInputStream(corrected.getBytes());
+		}
+		return resultStream;
 	}
 	
 	/*
@@ -143,7 +257,7 @@ public class JTextPaneWrapper extends JTextPane implements StateHolder, SlicingL
 		return stateHolder.getFoundNodeList();
 	}
 	
-	public SlicedNode getBoundSlicedNode(Node node){
+	public NodeRepresentation getBoundSlicedNode(Node node){
 		return stateHolder.getBoundSlicedNode(node);
 	}
 	
@@ -172,7 +286,7 @@ public class JTextPaneWrapper extends JTextPane implements StateHolder, SlicingL
 	
 	public void stainAgain(){
 		newDocument();
-		this.stateHolder.invokeSlicerListeners();
+		this.stateHolder.invokeParserListeners();
 		//slicer.useHandler();
 	}
 
@@ -345,8 +459,8 @@ public class JTextPaneWrapper extends JTextPane implements StateHolder, SlicingL
 		switch(node.getNodeType()){
 		case Node.ELEMENT_NODE:
 			//snode = bindingMap.get(node);
-			SlicedNode snode = getBoundSlicedNode(node);
-			SliceRepresentation srep = snode.getOpeningSlice();
+			NodeRepresentation snode = getBoundSlicedNode(node);
+			HalfElementRepresentation srep = snode.getOpeningSlice();
 			setSelectionStart(srep.getNameStartPosition());
 			setSelectionEnd(srep.getNameEndPosition()+1);
 			selectText();

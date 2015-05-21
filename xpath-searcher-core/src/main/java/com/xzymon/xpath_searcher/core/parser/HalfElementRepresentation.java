@@ -1,9 +1,9 @@
-package com.xzymon.xpath_searcher.core.parsing;
+package com.xzymon.xpath_searcher.core.parser;
 
 import java.util.LinkedList;
 import java.util.List;
 
-public class SliceRepresentation {
+public class HalfElementRepresentation {
 	private int startsAt = -1;
 	private int endsAt = -1;
 	private int nameStartsAt = -1;
@@ -13,7 +13,7 @@ public class SliceRepresentation {
 	private boolean raw = false;
 	private List<AttributeRepresentation> attributes = null;
 	private List<ErrorRepresentation> errors = null;
-	private List<SliceInterior> interiors = null;
+	private List<ElementInterior> interiors = null;
 	
 	public int getStartPosition() {
 		return startsAt;
@@ -100,15 +100,15 @@ public class SliceRepresentation {
 		errors.add(error);
 	}
 	
-	public List<SliceInterior> getInterior() {
+	public List<ElementInterior> getInterior() {
 		return interiors;
 	}
-	public void setInterior(List<SliceInterior> interiors) {
+	public void setInterior(List<ElementInterior> interiors) {
 		this.interiors = interiors;
 	}
-	public void addInterior(SliceInterior interior){
+	public void addInterior(ElementInterior interior){
 		if(interiors==null){
-			interiors = new LinkedList<SliceInterior>();
+			interiors = new LinkedList<ElementInterior>();
 		}
 		interiors.add(interior);
 	}
@@ -139,7 +139,7 @@ public class SliceRepresentation {
 		}
 		StringBuffer intSb = new StringBuffer();
 		if(interiors!=null && !interiors.isEmpty()){
-			for(SliceInterior interior: interiors){
+			for(ElementInterior interior: interiors){
 				if(intSb.length()!=0){
 					intSb.append(", ");
 				}
