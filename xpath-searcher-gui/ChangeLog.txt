@@ -74,3 +74,7 @@ Now ImprovedSlicer contains char[] instead of byte[] as data, but uses InputStre
 
 [v 0.1.0.alpha] [21-05-2015]
 \ alpha version - full info will be provided with final version
+
+[v 0.1.0.Final] [22-05-2015]
++XPathSearcherPane - GUI component which allows to deal with XPath searching in loaded stream(for example: a file)
++GuiApp - independent frame demonstrating the usage of XPathSearcherPane

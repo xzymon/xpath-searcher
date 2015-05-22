@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.xzymon</groupId>
   <artifactId>xpath-searcher-core</artifactId>
-  <version>0.1.0.alpha</version>
+  <version>0.1.0.Final</version>
   
   <dependencies>
 		<dependency>
@@ -45,7 +45,14 @@
 					</execution>
 				</executions>
 				<configuration>
-					<mainClass>com.xzymon.xpath_searcher.core.StandardMain</mainClass>
+					<mainClass>com.xzymon.xpath_searcher.core.XPathSearcher</mainClass>
+					<arguments>
+						<argument>-h</argument>
+						<argument>//*;//*/@*</argument>
+						<argument>-r</argument>
+						<argument>div.footer1;div.footer2;div.footer3</argument>
+						<argument>/home/szymon/Dokumenty/za10groszy.pl-lista.html</argument>
+					</arguments>
 				</configuration>
 			</plugin>
 		</plugins>

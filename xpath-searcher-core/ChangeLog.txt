@@ -1,2 +1,10 @@
 [v 0.0.1-SNAPSHOT] [13-05-2015]
 + XPathEngineWrapper - to manage XPath searching 
+
+[v 0.1.0.Final] [22-05-2015]
++XPathSearcher - has static methods to search XPath nodes. Uses XPathSearchingListeners to handle found nodes
++XPathSearchingListener - interface to handle with found nodes
++LoggingXPathSearchingListener - simple implementation of XPathSearchingListener for logging found nodes
++SystemOutStreamXPathSearchingListener - simple implementation of XPathSearchingListener for printing found nodes to System.out
+*HTML processing involves removal of tags: head, img, input, br, area, button, script
+*XML processing involves removal of all attributes which names start with "xmlns" 

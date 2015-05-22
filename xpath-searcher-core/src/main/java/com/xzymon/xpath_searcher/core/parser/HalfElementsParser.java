@@ -87,81 +87,83 @@ public class HalfElementsParser {
 		int slashPos;
 		int endPos;
 		
-		for(HalfElementRepresentation sliceR: slicesR){
-			logger.debug(sliceR.toString());
-			
-			//TODO: here
-			if(sliceR.isRaw()){
-				for(ParserListener pl : parserListeners){
-					pl.rawText(sliceR.getStartPosition(), sliceR.getEndPosition());
-				}
-			} else if(sliceR.isOther()){
-				for(ParserListener pl : parserListeners){
-					pl.otherTag(sliceR.getStartPosition(), sliceR.getEndPosition());
-				}
-			} else {
-				for(ParserListener pl : parserListeners){
-					pl.lessThanStartChar(sliceR.getStartPosition());
-				}
-				if(sliceR.isClosing()){
+		if(parserListeners!=null && parserListeners.size()>0){
+			for(HalfElementRepresentation sliceR: slicesR){
+				logger.debug(sliceR.toString());
+				
+				//TODO: here
+				if(sliceR.isRaw()){
 					for(ParserListener pl : parserListeners){
-						pl.closingSlash(sliceR.getClosingSlashPosition());
+						pl.rawText(sliceR.getStartPosition(), sliceR.getEndPosition());
 					}
-				}
-				for(ParserListener pl : parserListeners){
-					pl.tagName(sliceR.getNameStartPosition(), sliceR.getNameEndPosition());
-				}
-				gapStart = sliceR.getNameEndPosition()+1;
-				if(sliceR.getInterior()!=null){
-					for(ElementInterior sInt : sliceR.getInterior()){
-						gapEnd = sInt.getStartPosition()-1;
-						if(gapEnd>=gapStart){
-							for(ParserListener pl : parserListeners){
-								pl.tagGap(gapStart, gapEnd);
-							}
-						}
-						if(sInt instanceof AttributeRepresentation){
-							attr = (AttributeRepresentation) sInt;
-							for(ParserListener pl : parserListeners){
-								pl.attributeName(attr.getStartsAt(), attr.getNameEndsAt());
-								pl.attributeEqualsSign(attr.getEqualsSignAt());
-								pl.attributeValue(attr.getStartQuotationMarkAt(), attr.getEndQuotationMarkAt());
-							}
-						}
-						if(sInt instanceof ErrorRepresentation){
-							error = (ErrorRepresentation) sInt;
-							for(ParserListener pl : parserListeners){
-								pl.error(error.getStartPosition(), error.getEndPosition());
-							}
-						}
-						gapStart = sInt.getEndPosition()+1;
+				} else if(sliceR.isOther()){
+					for(ParserListener pl : parserListeners){
+						pl.otherTag(sliceR.getStartPosition(), sliceR.getEndPosition());
 					}
-				}
-				//trzeba obsługiwać ewentualną przerwę przed znakiem/znakami kończącym 
-				if(sliceR.isSelfClosing()){
-					slashPos = sliceR.getClosingSlashPosition();
-					if(slashPos>gapStart){
+				} else {
+					for(ParserListener pl : parserListeners){
+						pl.lessThanStartChar(sliceR.getStartPosition());
+					}
+					if(sliceR.isClosing()){
 						for(ParserListener pl : parserListeners){
-							pl.tagGap(gapStart, slashPos-1);
+							pl.closingSlash(sliceR.getClosingSlashPosition());
 						}
-						gapStart = slashPos+1;
 					}
 					for(ParserListener pl : parserListeners){
-						pl.closingSlash(sliceR.getClosingSlashPosition());
+						pl.tagName(sliceR.getNameStartPosition(), sliceR.getNameEndPosition());
 					}
-				}
-				//
-				else {
-					endPos = sliceR.getEndPosition();
-					if(endPos>gapStart){
-						for(ParserListener pl : parserListeners){
-							pl.tagGap(gapStart, endPos-1);
+					gapStart = sliceR.getNameEndPosition()+1;
+					if(sliceR.getInterior()!=null){
+						for(ElementInterior sInt : sliceR.getInterior()){
+							gapEnd = sInt.getStartPosition()-1;
+							if(gapEnd>=gapStart){
+								for(ParserListener pl : parserListeners){
+									pl.tagGap(gapStart, gapEnd);
+								}
+							}
+							if(sInt instanceof AttributeRepresentation){
+								attr = (AttributeRepresentation) sInt;
+								for(ParserListener pl : parserListeners){
+									pl.attributeName(attr.getStartsAt(), attr.getNameEndsAt());
+									pl.attributeEqualsSign(attr.getEqualsSignAt());
+									pl.attributeValue(attr.getStartQuotationMarkAt(), attr.getEndQuotationMarkAt());
+								}
+							}
+							if(sInt instanceof ErrorRepresentation){
+								error = (ErrorRepresentation) sInt;
+								for(ParserListener pl : parserListeners){
+									pl.error(error.getStartPosition(), error.getEndPosition());
+								}
+							}
+							gapStart = sInt.getEndPosition()+1;
 						}
 					}
-				}
-				//
-				for(ParserListener pl : parserListeners){
-					pl.greaterThanEndingChar(sliceR.getEndPosition());
+					//trzeba obsługiwać ewentualną przerwę przed znakiem/znakami kończącym 
+					if(sliceR.isSelfClosing()){
+						slashPos = sliceR.getClosingSlashPosition();
+						if(slashPos>gapStart){
+							for(ParserListener pl : parserListeners){
+								pl.tagGap(gapStart, slashPos-1);
+							}
+							gapStart = slashPos+1;
+						}
+						for(ParserListener pl : parserListeners){
+							pl.closingSlash(sliceR.getClosingSlashPosition());
+						}
+					}
+					//
+					else {
+						endPos = sliceR.getEndPosition();
+						if(endPos>gapStart){
+							for(ParserListener pl : parserListeners){
+								pl.tagGap(gapStart, endPos-1);
+							}
+						}
+					}
+					//
+					for(ParserListener pl : parserListeners){
+						pl.greaterThanEndingChar(sliceR.getEndPosition());
+					}
 				}
 			}
 		}

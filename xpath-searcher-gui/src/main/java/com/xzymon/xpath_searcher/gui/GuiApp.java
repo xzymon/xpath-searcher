@@ -42,7 +42,7 @@ public class GuiApp extends JFrame{
 	private JMenuBar menuBar;
 	private JMenu mFile;
 	private JPanel mainPanel, topPanel, centralPanel;
-	private XPathSearcherPane analysePane;
+	private XPathSearcherPane searchPane;
 
 	private JButton selectButton;
 	private JButton searchButton;
@@ -58,8 +58,6 @@ public class GuiApp extends JFrame{
 	public static void main(String[] args) {
 		try{
 			for(javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()){
-				//System.out.println(info.getName());
-				///*
 				if(("Metal").equals(info.getName())){
 					javax.swing.UIManager.setLookAndFeel(info.getClassName());
 				}
@@ -82,7 +80,6 @@ public class GuiApp extends JFrame{
 			}
 		} catch (ClassNotFoundException | InstantiationException
 				| IllegalAccessException | UnsupportedLookAndFeelException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			
@@ -115,10 +112,8 @@ public class GuiApp extends JFrame{
 		this.setJMenuBar(menuBar);
 		
 		mainPanel = new JPanel(new BorderLayout());
-		topPanel = new JPanel(new GridBagLayout());
-		centralPanel = new JPanel(new GridLayout(1,1));
 		
-		
+		topPanel = new JPanel(new GridLayout(2,1));
 		JLabel searchLabel = new JLabel("Phrase to search");
 		searchField = new JTextField(50);
 		searchButton = new JButton(new SearchAction());
@@ -128,30 +123,32 @@ public class GuiApp extends JFrame{
 		
 		selectButton = new JButton(new SelectAction());
 		
+		JPanel topPanel1 = new JPanel(new GridBagLayout());
+		JPanel topPanel2 = new JPanel(new GridBagLayout());
+		
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.gridx = 0;
 		gbc.gridy = 0;
 		gbc.anchor = GridBagConstraints.LINE_END;
-		topPanel.add(searchLabel, gbc);
+		topPanel1.add(searchLabel, gbc);
+		topPanel2.add(nextResultButton, gbc);
 		gbc.anchor = GridBagConstraints.LINE_START;
 		gbc.gridx = 1;
-		topPanel.add(searchField, gbc);
+		topPanel1.add(searchField, gbc);
+		topPanel2.add(resetButton, gbc);
 		gbc.gridx = 2;
-		topPanel.add(searchButton, gbc);
-		gbc.gridy = 1;
-		gbc.gridx = 0;
-		topPanel.add(nextResultButton, gbc);
-		gbc.gridx = 1;
-		topPanel.add(resetButton, gbc);
-		gbc.gridx = 2;
-		topPanel.add(clearButton, gbc);
-		gbc.gridy = 2;
-		gbc.gridx = 0;
-		topPanel.add(selectButton, gbc);
+		topPanel1.add(searchButton, gbc);
+		topPanel2.add(clearButton, gbc);
+		gbc.gridx = 3;
+		topPanel2.add(selectButton, gbc);
 		
-		analysePane = new XPathSearcherPane();
-		analysePane.setPalette(palettesManager.getCurrentPalette());
-		centralPanel.add(new JScrollPane(analysePane));
+		topPanel.add(topPanel1);
+		topPanel.add(topPanel2);
+		
+		centralPanel = new JPanel(new GridLayout(1,1));
+		searchPane = new XPathSearcherPane();
+		searchPane.setPalette(palettesManager.getCurrentPalette());
+		centralPanel.add(new JScrollPane(searchPane));
 		
 		mainPanel.add(topPanel, BorderLayout.NORTH);
 		mainPanel.add(centralPanel, BorderLayout.CENTER);
@@ -219,12 +216,10 @@ public class GuiApp extends JFrame{
 			String phrase = searchField.getText();
 			logger.info(String.format("Invoked for search phrase: %1$s", phrase));
 			stainAgain();
-			//if(engine!=null){
-			if(!analysePane.isEmpty()){
+			if(!searchPane.isEmpty()){
 				try {
-					//NodeList list = engine.findNodes(phrase);
-					analysePane.newSearch(phrase);
-					analysePane.selectAllFoundNodes();
+					searchPane.newSearch(phrase);
+					searchPane.selectAllFoundNodes();
 				} catch (XPathExpressionException e1) {
 					e1.printStackTrace();
 				}
@@ -245,7 +240,7 @@ public class GuiApp extends JFrame{
 			String phrase = searchField.getText();
 			logger.info(String.format("Invoked for search phrase: %1$s", phrase));
 			stainAgain();
-			analysePane.nextNode();
+			searchPane.nextNode();
 		}		
 	}
 	
@@ -261,7 +256,7 @@ public class GuiApp extends JFrame{
 			String phrase = searchField.getText();
 			logger.info(String.format("Invoked for search phrase: %1$s", phrase));
 			stainAgain();
-			analysePane.reset();
+			searchPane.reset();
 		}		
 	}
 	
@@ -276,7 +271,7 @@ public class GuiApp extends JFrame{
 		public void actionPerformed(ActionEvent e) {
 			searchField.setText("");
 			stainAgain();
-			analysePane.clear();
+			searchPane.clear();
 		}
 	}
 	
@@ -299,7 +294,7 @@ public class GuiApp extends JFrame{
 						InputStream is = null;
 						try{
 							is = new FileInputStream(file);
-							analysePane.loadXMLStream(is);
+							searchPane.loadXMLStream(is);
 						} catch (FileNotFoundException ex) {
 							logger.error(String.format("FileNotFoundException during: new FileInputStream(\"%1$s\")", file.getAbsolutePath()));
 						} finally {
@@ -352,7 +347,7 @@ public class GuiApp extends JFrame{
 						
 						try{
 							is = new FileInputStream(file);
-							analysePane.loadHTMLStream(is, null);
+							searchPane.loadHTMLStream(is, null);
 						} catch (FileNotFoundException ex) {
 							logger.error(String.format("FileNotFoundException during: new FileInputStream(\"%1$s\")", file.getAbsolutePath()));
 						} finally {
@@ -391,10 +386,10 @@ public class GuiApp extends JFrame{
 	}
 	
 	public void selectText(){
-		analysePane.selectText();
+		searchPane.selectText();
 	}
 	
 	public void stainAgain(){
-		analysePane.stainAgain();
+		searchPane.stainAgain();
 	}
 }
