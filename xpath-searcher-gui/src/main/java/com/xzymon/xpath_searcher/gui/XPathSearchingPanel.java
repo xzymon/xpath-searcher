@@ -47,9 +47,13 @@ public class XPathSearchingPanel extends JPanel{
 	private JTextField searchField;
 
 	private final XmlStylePalettesManager palettesManager = new XmlStylePalettesManager();
+	
+	public XPathSearchingPanel() {
+		initComponents();
+	}
 
 	public XPathSearchingPanel(Properties props) {
-		loadValuesFromProperties(props);
+		loadStylesFromProperties(props);
 		initComponents();
 	}
 
@@ -110,7 +114,7 @@ public class XPathSearchingPanel extends JPanel{
 		searchPane.loadHTMLStream(is, cssClassesToRemoveFromDoc);
 	}
 
-	public void loadValuesFromProperties(Properties props) {
+	public void loadStylesFromProperties(Properties props) {
 		String strKey, strValue;
 		boolean managerAdded = false;
 

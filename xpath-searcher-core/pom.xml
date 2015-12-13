@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.xzymon</groupId>
 	<artifactId>xpath-searcher-core</artifactId>
-	<version>0.1.1.Final</version>
+	<version>0.1.2.Final</version>
 
 	<dependencies>
 		<dependency>
@@ -44,30 +44,5 @@
 				<directory>src/test/resources</directory>
 			</testResource>
 		</testResources>
-		<plugins>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>exec-maven-plugin</artifactId>
-				<version>1.4.0</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>java</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<mainClass>com.xzymon.xpath_searcher.core.XPathSearcher</mainClass>
-					<arguments>
-						<argument>-h</argument>
-						<argument>//div</argument>
-						<!-- <argument>//*;//*/@*</argument> -->
-						<argument>-r</argument>
-						<argument>div.footer1;div.footer2;div.footer3</argument>
-						<argument>/home/szymon/Pobrane/za10/za10groszy.pl.html</argument>
-					</arguments>
-				</configuration>
-			</plugin>
-		</plugins>
 	</build>
 </project>

@@ -1,3 +1,6 @@
+[v 0.1.2.Final] [13-12-2015]
+\ XPathSearchingPanel changed to be compliant with JavaBeans
+
 [v 0.1.1.Final] [13-12-2015]
 + XPathSearcherDisplay
 + XPathSearchingPanel
