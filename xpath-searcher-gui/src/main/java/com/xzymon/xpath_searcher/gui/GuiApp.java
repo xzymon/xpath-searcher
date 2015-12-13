@@ -1,9 +1,5 @@
 package com.xzymon.xpath_searcher.gui;
 
-import java.awt.BorderLayout;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.io.File;
@@ -15,93 +11,74 @@ import java.util.Properties;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
-import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.UnsupportedLookAndFeelException;
-import javax.xml.xpath.XPathExpressionException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.xzymon.xpath_searcher.gui.stain.XmlStylePalettesManager;
-
-public class GuiApp extends JFrame{
+public class GuiApp extends JFrame {
 	private static final long serialVersionUID = 3219548713775085362L;
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(GuiApp.class.getName());
-	private static final String PROPS_PATH = "/xpath-searcher.properties";
-	
+	private static final String DEFAULT_PROPS_PATH = "/xpath-searcher.properties";
+
+	private Properties appProperties;
+
 	private JMenuBar menuBar;
 	private JMenu mFile;
-	private JPanel mainPanel, topPanel, centralPanel;
-	private XPathSearcherPane searchPane;
+	private XPathSearchingPanel searchingP;
 
-	private JButton selectButton;
-	private JButton searchButton;
-	private JButton nextResultButton;
-	private JButton resetButton;
-	private JButton clearButton;
-
-	private JTextField searchField;
-	
 	private final JFileChooser fileChooser = new JFileChooser();
-	private final XmlStylePalettesManager palettesManager = new XmlStylePalettesManager();
-	
+
 	public static void main(String[] args) {
-		try{
-			for(javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()){
-				if(("Metal").equals(info.getName())){
+		try {
+			for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+				if (("Metal").equals(info.getName())) {
 					javax.swing.UIManager.setLookAndFeel(info.getClassName());
 				}
-				//*/
+				// */
 				/*
-				if(("Nimbus").equals(info.getName())){
-					javax.swing.UIManager.setLookAndFeel(info.getClassName());
-				}
-				*/
+				 * if(("Nimbus").equals(info.getName())){
+				 * javax.swing.UIManager.setLookAndFeel(info.getClassName()); }
+				 */
 				/*
-				if(("CDE/Motif").equals(info.getName())){
-					javax.swing.UIManager.setLookAndFeel(info.getClassName());
-				}
-				*/
+				 * if(("CDE/Motif").equals(info.getName())){
+				 * javax.swing.UIManager.setLookAndFeel(info.getClassName()); }
+				 */
 				/*
-				if(("GTK+").equals(info.getName())){
-					javax.swing.UIManager.setLookAndFeel(info.getClassName());
-				}
-				*/
+				 * if(("GTK+").equals(info.getName())){
+				 * javax.swing.UIManager.setLookAndFeel(info.getClassName()); }
+				 */
 			}
-		} catch (ClassNotFoundException | InstantiationException
-				| IllegalAccessException | UnsupportedLookAndFeelException e) {
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+				| UnsupportedLookAndFeelException e) {
 			e.printStackTrace();
 		} finally {
-			
+
 		}
-		
+
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
-		    public void run() {
-		        GuiApp gui = new GuiApp();
-		        gui.setVisible(true);
-		    }
+			public void run() {
+				GuiApp gui = new GuiApp();
+				gui.setVisible(true);
+			}
 		});
 	}
-	
-	public GuiApp(){
-		Properties props = loadProperties();
-		
+
+	public GuiApp() {
+		appProperties = loadProperties();
+
 		initComponents();
 	}
 
 	private void initComponents() {
 		this.setDefaultCloseOperation(EXIT_ON_CLOSE);
-		
+
 		menuBar = new JMenuBar();
 		mFile = new JMenu("File");
 		mFile.add(new OpenFileAction());
@@ -110,198 +87,71 @@ public class GuiApp extends JFrame{
 		mFile.add(new CloseAction());
 		menuBar.add(mFile);
 		this.setJMenuBar(menuBar);
-		
-		mainPanel = new JPanel(new BorderLayout());
-		
-		topPanel = new JPanel(new GridLayout(2,1));
-		JLabel searchLabel = new JLabel("Phrase to search");
-		searchField = new JTextField(50);
-		searchButton = new JButton(new SearchAction());
-		nextResultButton = new JButton(new NextResultAction());
-		resetButton = new JButton(new  ResetAction());
-		clearButton = new JButton(new ClearAction());
-		
-		selectButton = new JButton(new SelectAction());
-		
-		JPanel topPanel1 = new JPanel(new GridBagLayout());
-		JPanel topPanel2 = new JPanel(new GridBagLayout());
-		
-		GridBagConstraints gbc = new GridBagConstraints();
-		gbc.gridx = 0;
-		gbc.gridy = 0;
-		gbc.anchor = GridBagConstraints.LINE_END;
-		topPanel1.add(searchLabel, gbc);
-		topPanel2.add(nextResultButton, gbc);
-		gbc.anchor = GridBagConstraints.LINE_START;
-		gbc.gridx = 1;
-		topPanel1.add(searchField, gbc);
-		topPanel2.add(resetButton, gbc);
-		gbc.gridx = 2;
-		topPanel1.add(searchButton, gbc);
-		topPanel2.add(clearButton, gbc);
-		gbc.gridx = 3;
-		topPanel2.add(selectButton, gbc);
-		
-		topPanel.add(topPanel1);
-		topPanel.add(topPanel2);
-		
-		centralPanel = new JPanel(new GridLayout(1,1));
-		searchPane = new XPathSearcherPane();
-		searchPane.setPalette(palettesManager.getCurrentPalette());
-		centralPanel.add(new JScrollPane(searchPane));
-		
-		mainPanel.add(topPanel, BorderLayout.NORTH);
-		mainPanel.add(centralPanel, BorderLayout.CENTER);
-		this.add(mainPanel);
-		
+
+		searchingP = new XPathSearchingPanel(appProperties);
+		this.add(searchingP);
+
 		pack();
 	}
 
-	private Properties loadProperties(){
+	private Properties loadProperties() {
 		Properties props = new Properties();
-		String strKey, strValue;
-		boolean managerAdded = false;
-		
-		InputStream is = this.getClass().getResourceAsStream(PROPS_PATH);
-		if(is!=null){
-			try{
+
+		InputStream is = this.getClass().getResourceAsStream(DEFAULT_PROPS_PATH);
+		if (is != null) {
+			try {
 				props.load(is);
-			} catch (IOException | IllegalArgumentException ex){
+			} catch (IOException | IllegalArgumentException ex) {
 				ex.printStackTrace();
 			}
 		}
-		
-		if(props.entrySet().isEmpty()){
-			logger.info("There are not any loaded properties.");
-		}
-		else {
-			logger.info("Loaded properties: ");
-			for(Object key: props.keySet()){
-				managerAdded = false;
-				strKey = key.toString();
-				strValue = props.get(key).toString();
-				logger.info(String.format("Loaded property: %1$s=%2$s", strKey, strValue));
-				palettesManager.overrideStyleByParameter(strKey, strValue);
-				logger.debug("Manager : " + managerAdded);
-			}
-		}
-		
+
 		return props;
 	}
-	
-	class CloseAction extends AbstractAction{
+
+	class CloseAction extends AbstractAction {
 		private static final long serialVersionUID = -2458760999790533135L;
 
-		public CloseAction(){
+		public CloseAction() {
 			putValue(Action.NAME, "Close");
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			logger.info("Bye!");
 			System.exit(0);
 		}
-		
-	}
-	
-	class SearchAction extends AbstractAction{
-		private static final long serialVersionUID = 1638709187169923458L;
 
-		public SearchAction(){
-			putValue(Action.NAME, "Search");
-		}
-		
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			String phrase = searchField.getText();
-			logger.info(String.format("Invoked for search phrase: %1$s", phrase));
-			stainAgain();
-			if(!searchPane.isEmpty()){
-				try {
-					searchPane.newSearch(phrase);
-					searchPane.selectAllFoundNodes();
-				} catch (XPathExpressionException e1) {
-					e1.printStackTrace();
-				}
-			}
-		}		
 	}
-	
-	
-	class NextResultAction extends AbstractAction{
-		private static final long serialVersionUID = 5431085850101225464L;
 
-		public NextResultAction(){
-			putValue(Action.NAME, "Next Result");
-		}
-		
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			String phrase = searchField.getText();
-			logger.info(String.format("Invoked for search phrase: %1$s", phrase));
-			stainAgain();
-			searchPane.nextNode();
-		}		
-	}
-	
-	class ResetAction extends AbstractAction{
-		private static final long serialVersionUID = 2735784609760788713L;
-
-		public ResetAction(){
-			putValue(Action.NAME, "Reset");
-		}
-		
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			String phrase = searchField.getText();
-			logger.info(String.format("Invoked for search phrase: %1$s", phrase));
-			stainAgain();
-			searchPane.reset();
-		}		
-	}
-	
-	class ClearAction extends AbstractAction {
-		private static final long serialVersionUID = -8592549398602437626L;
-
-		public ClearAction(){
-			putValue(Action.NAME, "Clear");
-		}
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			searchField.setText("");
-			stainAgain();
-			searchPane.clear();
-		}
-	}
-	
-	class OpenFileAction extends AbstractAction{
+	class OpenFileAction extends AbstractAction {
 		private static final long serialVersionUID = -7305718383597147777L;
 
-		public OpenFileAction(){
+		public OpenFileAction() {
 			putValue(Action.NAME, "Open XML File");
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			int returnValue = fileChooser.showOpenDialog(GuiApp.this);
-			
-			if(returnValue == JFileChooser.APPROVE_OPTION){
+
+			if (returnValue == JFileChooser.APPROVE_OPTION) {
 				File file = fileChooser.getSelectedFile();
 				logger.info(String.format("Opening file: %1$s", file.getAbsolutePath()));
-				if(file.exists()){
-					if(file.canRead()){
+				if (file.exists()) {
+					if (file.canRead()) {
 						InputStream is = null;
-						try{
+						try {
 							is = new FileInputStream(file);
-							searchPane.loadXMLStream(is);
+							searchingP.loadXML(is);
 						} catch (FileNotFoundException ex) {
-							logger.error(String.format("FileNotFoundException during: new FileInputStream(\"%1$s\")", file.getAbsolutePath()));
+							logger.error(String.format("FileNotFoundException during: new FileInputStream(\"%1$s\")",
+									file.getAbsolutePath()));
 						} finally {
-							if(is!=null){
-								try{
+							if (is != null) {
+								try {
 									is.close();
-								} catch(IOException ex){
+								} catch (IOException ex) {
 									ex.printStackTrace();
 								}
 							}
@@ -314,47 +164,48 @@ public class GuiApp extends JFrame{
 				}
 			}
 		}
-		
+
 	}
-	
-	class OpenHtmlFileFilteringWithJSoupAction extends AbstractAction{
+
+	class OpenHtmlFileFilteringWithJSoupAction extends AbstractAction {
 		private static final long serialVersionUID = -7305718383597147777L;
 
-		public OpenHtmlFileFilteringWithJSoupAction(){
+		public OpenHtmlFileFilteringWithJSoupAction() {
 			putValue(Action.NAME, "Open Html File with JSoup");
 			putValue(Action.ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_O, KeyEvent.CTRL_DOWN_MASK));
 		}
-		
+
 		@Override
 		public void actionPerformed(ActionEvent e) {
 			int returnValue = fileChooser.showOpenDialog(GuiApp.this);
-			
-			if(returnValue == JFileChooser.APPROVE_OPTION){
+
+			if (returnValue == JFileChooser.APPROVE_OPTION) {
 				File file = fileChooser.getSelectedFile();
 				logger.info(String.format("Opening file: %1$s", file.getAbsolutePath()));
-				if(file.exists()){
-					if(file.canRead()){
+				if (file.exists()) {
+					if (file.canRead()) {
 						InputStream is = null;
 						/*
-						cssElementsToRemove.add("div.footer1");
-						cssElementsToRemove.add("div.footer2");
-						cssElementsToRemove.add("div.footer3");
-						cssElementsToRemove.add("div.footer4");
-						//cssElementsToRemove.add("div.center");
-						cssElementsToRemove.add("div.askCookies");
-						cssElementsToRemove.add("div.hidden");
-						*/
-						
-						try{
+						 * cssElementsToRemove.add("div.footer1");
+						 * cssElementsToRemove.add("div.footer2");
+						 * cssElementsToRemove.add("div.footer3");
+						 * cssElementsToRemove.add("div.footer4");
+						 * //cssElementsToRemove.add("div.center");
+						 * cssElementsToRemove.add("div.askCookies");
+						 * cssElementsToRemove.add("div.hidden");
+						 */
+
+						try {
 							is = new FileInputStream(file);
-							searchPane.loadHTMLStream(is, null);
+							searchingP.loadHTML(is);
 						} catch (FileNotFoundException ex) {
-							logger.error(String.format("FileNotFoundException during: new FileInputStream(\"%1$s\")", file.getAbsolutePath()));
+							logger.error(String.format("FileNotFoundException during: new FileInputStream(\"%1$s\")",
+									file.getAbsolutePath()));
 						} finally {
-							if(is!=null){
-								try{
+							if (is != null) {
+								try {
 									is.close();
-								} catch(IOException ex){
+								} catch (IOException ex) {
 									ex.printStackTrace();
 								}
 							}
@@ -367,15 +218,13 @@ public class GuiApp extends JFrame{
 				}
 			}
 		}
-		
+
 	}
-	
-	
-	
+
 	class SelectAction extends AbstractAction {
 		private static final long serialVersionUID = -4031390293576294826L;
 
-		public SelectAction(){
+		public SelectAction() {
 			putValue(Action.NAME, "Select");
 		}
 
@@ -384,12 +233,12 @@ public class GuiApp extends JFrame{
 			selectText();
 		}
 	}
-	
-	public void selectText(){
-		searchPane.selectText();
+
+	public void selectText() {
+		searchingP.selectText();
 	}
-	
-	public void stainAgain(){
-		searchPane.stainAgain();
+
+	public void stainAgain() {
+		searchingP.stainAgain();
 	}
 }

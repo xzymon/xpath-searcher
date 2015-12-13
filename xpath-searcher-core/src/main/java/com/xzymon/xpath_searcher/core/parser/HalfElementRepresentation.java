@@ -3,6 +3,31 @@ package com.xzymon.xpath_searcher.core.parser;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * Klasa reprezentująca obszar tagu XML lub HTML, zamkniętego wewnątrz < i >.
+ * Przykłady takich prawidłowych tagów w wypadku HTMLu (każda linia to oddzielny prawidłowy tag):
+ * <pre>
+ * {@code
+ * <a href="index.html" charset="UTF8">
+ * </a>
+ * <hr/>
+ * }
+ * </pre>
+ * Poza tym klasa ta może reprezentować obszar "surowego" tekstu zawartego
+ * pomiędzy takimi jak powyżej tagami. Poniższy kod zostanie przetworzony 
+ * przez parser na trzy instancje tej klasy:
+ * <pre>
+ * {@code
+ * <a href="index.html" charset="UTF8">index</a>
+ * }
+ * </pre>
+ * <ol>
+ * <li>&lt;a href="index.html" charset="UTF8"> - tag otwierający,</li>
+ * <li>index - tag zawierający "surowy" tekst ({@link #isRaw()} == true),</li>
+ * <li>&lt;/a> - tag zamykający ({@link #isClosing()} == true)</li>
+ * </ol>
+ * @author Szymon Ignaciuk
+ */
 public class HalfElementRepresentation {
 	private int startsAt = -1;
 	private int endsAt = -1;
@@ -45,16 +70,37 @@ public class HalfElementRepresentation {
 	public void setClosingSlashPosition(int pos){
 		this.closingSlashAt = pos;
 	}
-	
+	/**
+	 * Testuje czy jest to tag zawierający istotny znak / 
+	 * - czyli w założeniach - drugi z obszarów dwuczłonowego tagu, tzn. 
+	 * dla dwuczłonowego tagu &lt;a>&lt;/a> warunek ten spełnia &lt;/a> 
+	 * (przy czym metoda nie jest odpowiedzialna za potwierdzenie czy istnieje
+	 * tag dopełniający - tzn. otwierający).
+	 * @return
+	 */
 	public boolean isClosing(){
 		return (closingSlashAt==startsAt+1)?true:false;
 	}
+	/**
+	 * Testuje czy tag sam się zamyka (tj. na przed ostatniej pozycji zawiera /, jak np. &lthr />.
+	 * @return
+	 */
 	public boolean isSelfClosing(){
 		return (closingSlashAt==endsAt-1)?true:false;
 	}
-	public boolean isShutDown(){
+	/**
+	 * Testuje czy tag jest prawidłowo zakończony, tj. posiada ustawioną pozycję znaku >.
+	 * @return
+	 */
+	public boolean isEnded(){
 		return endsAt!=-1;
 	}
+	/**
+	 * Testuje czy jest to tag inny niż normalne tagi HTMl, XML lub "surowe" 
+	 * - np. te warunki spełniają tagi &lt;!DOCTYPE html>, &lt;?xml version="1.0"?> 
+	 * oraz &lt;!-- -->
+	 * @return
+	 */
 	public boolean isOther(){
 		return other;
 	}
@@ -62,18 +108,31 @@ public class HalfElementRepresentation {
 	public void setOther(boolean other){
 		this.other = other;
 	}
-	
+	/**
+	 * Testuje czy jest to tag opakowujący surowy tekst - tzn. nie zawierający
+	 * @return
+	 */
 	public boolean isRaw() {
 		return raw;
 	}
 	public void setRaw(boolean raw) {
 		this.raw = raw;
 	}
-	
+	/**
+	 * Testuje czy jest to tag nie zawierający istotnego znaku / 
+	 * - czyli w założeniach - pierwszy z obszarów dwuczłonowego tagu, tzn. 
+	 * dla dwuczłonowego tagu &lt;a>&lt;/a> warunek ten spełnia &lt;a>
+	 * (przy czym metoda nie jest odpowiedzialna za potwierdzenie czy istnieje
+	 * tag dopełniający - tzn. zamykający).
+	 * @return
+	 */
 	public boolean isOpening(){
 		return !raw && !other && !isClosing();
 	}
-	
+	/**
+	 * Zwraca listę obiektów reprezentujacych atrybuty zawarte w tym tagu.
+	 * @return
+	 */
 	public List<AttributeRepresentation> getAttributes() {
 		return attributes;
 	}
@@ -86,7 +145,10 @@ public class HalfElementRepresentation {
 		}
 		attributes.add(attribute);
 	}
-	
+	/**
+	 * Zwraca listę obiektów reprezentujących błędy zawarte w tym tagu
+	 * @return
+	 */
 	public List<ErrorRepresentation> getErrors() {
 		return errors;
 	}
@@ -99,7 +161,11 @@ public class HalfElementRepresentation {
 		}
 		errors.add(error);
 	}
-	
+	/**
+	 * Zwraca listę elementów wewnętrznych - którymi mogą być obiekty
+	 * reprezentujące błędy lub atrybuty
+	 * @return
+	 */
 	public List<ElementInterior> getInterior() {
 		return interiors;
 	}

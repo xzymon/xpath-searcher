@@ -38,9 +38,19 @@ import com.xzymon.xpath_searcher.core.parser.AttributeRepresentation;
 import com.xzymon.xpath_searcher.core.parser.HalfElementRepresentation;
 import com.xzymon.xpath_searcher.gui.stain.XmlStylePalette;
 
-public class XPathSearcherPane extends JTextPane implements StateHolder, ParserListener, XPathSearchingListener{
+/**
+ * <p>Graficzny komponent umożliwiający wizualizacją dokumentu w którym zachodzi
+ * wyszukiwanie XPath wraz z podświetlaniem wyników wyszukiwania.</p>
+ * <p>Nie jest to komponent dostarczający sam z siebie pełnej funkcjonalności wyszukiwania,
+ * choć odpowiednie spięcie go z innymi komponentami (wywołującymi odpowiednie metody
+ * z tego komponentu) umożliwia uzyskanie takiej funkcjonalności.
+ * </p>
+ * @author Szymon Ignaciuk
+ * @since 0.1.1.Final
+ */
+public class XPathSearcherDisplay extends JTextPane implements StateHolder, ParserListener, XPathSearchingListener{
 	private static final long serialVersionUID = 3456655673318302723L;
-	private static final Logger logger = LoggerFactory.getLogger(XPathSearcherPane.class.getName());
+	private static final Logger logger = LoggerFactory.getLogger(XPathSearcherDisplay.class.getName());
 	
 	private boolean wrapState = true;
 	
@@ -53,7 +63,7 @@ public class XPathSearcherPane extends JTextPane implements StateHolder, ParserL
 	
 	private List<String> standardCssElementsToRemove;
 	
-	public XPathSearcherPane() {
+	public XPathSearcherDisplay() {
 		super();
 		this.newDocument();
 		init();
@@ -78,7 +88,7 @@ public class XPathSearcherPane extends JTextPane implements StateHolder, ParserL
 		standardCssElementsToRemove.add("script");
 	}
 	
-	public boolean loadStream(InputStream is) {
+	private boolean loadStream(InputStream is) {
 		boolean result = false;
 		try{
 			newDocument();
@@ -207,6 +217,9 @@ public class XPathSearcherPane extends JTextPane implements StateHolder, ParserL
 		return (ImmutableXMLDocument)this.getStyledDocument();
 	}
 	
+	/**
+	 * Metoda której wywołanie powoduje wyczyszczenie stanu komponentu.
+	 */
 	public void newDocument(){
 		this.setStyledDocument(new ImmutableXMLDocument());
 	}

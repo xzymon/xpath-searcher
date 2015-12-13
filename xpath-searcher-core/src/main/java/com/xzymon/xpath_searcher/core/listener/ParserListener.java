@@ -1,5 +1,11 @@
 package com.xzymon.xpath_searcher.core.listener;
 
+/**
+ * Interface przeznaczony do odbierania od parsera XML/HTML informacji
+ * o wykryciu podczas parsowania pozycji kolejnego znaku - co umożliwia 
+ * budowę obiektowego drzewa dokumentu.
+ * @author Szymon Ignaciuk
+ */
 public interface ParserListener {
 	// dostarczanie informacji o trybach pracy w przedziałach znaków
 	void otherTag(int startPos, int lastPos);

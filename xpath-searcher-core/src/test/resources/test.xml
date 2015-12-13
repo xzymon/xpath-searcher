@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+                                         "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+ <session-factory name="HPersest-HibernateSF">
+ 	<property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
+	<property name="hibernate.connection.password">$up3rUseR</property>
+	<property name="hibernate.connection.url">jdbc:mysql://localhost:3306/persest</property>
+	<property name="hibernate.connection.username">hpersest</property>
+	<property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
+	<!-- Use utf8 encoding while contacting with database -->
+	<property name="hibernate.connection.CharSet">utf8</property>
+	<property name="hibernate.connection.characterEncoding">utf8</property>
+	<property name="hibernate.connection.useUnicode">true</property>
+  <!-- 
+  <property name="hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
+   -->
+  
+  
+  <!--  
+  <property name="hibernate.connection.datasource">java:comp/env/jdbc/hpersestDS</property>
+  -->
+  <property name="hibernate.current_session_context_class">jta</property>
+  <!-- Echo all executed SQL to stdout -->
+  <property name="show_sql">true</property>
+  <!-- Drop and re-create the database schema on startup -->
+  <property name="hbm2ddl.auto">update</property>
+  <!-- mapping package - powoduje wczytanie mapowań package-level -->
+  <!-- mapping package wskazuje się package - nie konkretny plik -->
+  <!-- poniższe powoduje wczytanie package-info.java -->
+  <mapping package="com.xzymon.hpersest.model"/>
+  <mapping class="com.xzymon.hpersest.model.Category"/>
+  <mapping class="com.xzymon.hpersest.model.Store"/>
+  <mapping class="com.xzymon.hpersest.model.Unit"/>
+  <mapping class="com.xzymon.hpersest.model.Product"/>
+  <mapping class="com.xzymon.hpersest.model.Purchase"/>
+  <mapping class="com.xzymon.hpersest.model.MockConsumption"/>
+  <mapping class="com.xzymon.hpersest.model.Consumption"/>
+ </session-factory>
+</hibernate-configuration>

@@ -1,3 +1,7 @@
+[v 0.1.1.Final] [13-12-2015]
++ XPathSearcherDisplay
++ XPathSearchingPanel
+
 [v 0.0.2] [27-04-2015]
 + Basic GUI template
 + JTextPane without line wrapping

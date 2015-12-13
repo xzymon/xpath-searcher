@@ -40,29 +40,31 @@ public class XMLStateHolder implements StateHolder{
 	
 	public XMLStateHolder(InputStream is, List<BindingListener> parsingListenersList) throws ParserException{
 		empty = true;
-		try{
-			this.bindingListeners = parsingListenersList;
-			int avail = is.available();
-			if(avail>0){
-				byte[] savedStream = new byte[avail];
-				is.read(savedStream);
-				ByteArrayInputStream bais = new ByteArrayInputStream(savedStream);
-				InputStreamReader reader = new InputStreamReader(bais);
-				char[] charBuf = new char[savedStream.length];
-				int read = reader.read(charBuf);
-				savedChars = new char[read];
-				System.arraycopy(charBuf, 0, savedChars, 0, read);
-				parser = new HalfElementsParser(savedChars);
-				engine = new XPathProcessor(new ByteArrayInputStream(savedStream), bindingListeners);
-				int boundElements = bindElementsToText();
-				int boundAttributes = bindAttributesToText();
-				for(BindingListener pl : bindingListeners){
-					pl.nodesBound(boundElements, boundAttributes);
+		if(is!=null){
+			try{
+				this.bindingListeners = parsingListenersList;
+				int avail = is.available();
+				if(avail>0){
+					byte[] savedStream = new byte[avail];
+					is.read(savedStream);
+					ByteArrayInputStream bais = new ByteArrayInputStream(savedStream);
+					InputStreamReader reader = new InputStreamReader(bais);
+					char[] charBuf = new char[savedStream.length];
+					int read = reader.read(charBuf);
+					savedChars = new char[read];
+					System.arraycopy(charBuf, 0, savedChars, 0, read);
+					parser = new HalfElementsParser(savedChars);
+					engine = new XPathProcessorImpl(new ByteArrayInputStream(savedStream), bindingListeners);
+					int boundElements = bindElementsToText();
+					int boundAttributes = bindAttributesToText();
+					for(BindingListener pl : bindingListeners){
+						pl.nodesBound(boundElements, boundAttributes);
+					}
+					empty = false;
 				}
-				empty = false;
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 	}
 	

@@ -1,5 +1,12 @@
 package com.xzymon.xpath_searcher.core.listener.internal;
 
+/**
+ * Klasa abstrakcyjna stanowiąca podstawową implementację interface'u 
+ * ControlPoint dla punktów kontrolnych które mogą obudować tylko jeden
+ * konkretny znak
+ * @author Szymon Ignaciuk
+ * @see ControlPoint
+ */
 public abstract class AbstractControlPoint implements ControlPoint{
 	private int position;
 	private char character = 0x0;

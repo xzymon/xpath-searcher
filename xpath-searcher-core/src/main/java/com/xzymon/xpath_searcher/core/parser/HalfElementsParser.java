@@ -22,12 +22,24 @@ import com.xzymon.xpath_searcher.core.listener.internal.EqualsSignControlPoint;
 import com.xzymon.xpath_searcher.core.listener.internal.ExclamationMarkControlPoint;
 import com.xzymon.xpath_searcher.core.listener.internal.GreaterThanControlPoint;
 import com.xzymon.xpath_searcher.core.listener.internal.LessThanControlPoint;
-import com.xzymon.xpath_searcher.core.listener.internal.NoneControlPoint;
+import com.xzymon.xpath_searcher.core.listener.internal.RawAreaEndingControlPoint;
 import com.xzymon.xpath_searcher.core.listener.internal.QuestionMarkControlPoint;
 import com.xzymon.xpath_searcher.core.listener.internal.SingleQuoteControlPoint;
 import com.xzymon.xpath_searcher.core.listener.internal.SlashSignControlPoint;
 import com.xzymon.xpath_searcher.core.listener.internal.WhitespaceControlPoint;
 
+/**
+ * Podstawowy parser analizujący plik w poszukiwaniu tagów, czyli fragmentów postaci:
+ * <ul>
+ * <li>&lt;nazwa-tagu></li>
+ * <li>&lt;nazwa-tagu/></li>
+ * <li>&lt;nazwa-tagu argument="wartość"></li>
+ * <li>&lt;nazwa-tagu argument="wartość"/></li>
+ * <li>&lt;/nazwa-tagu></li>
+ * </ul>
+ * @author Szymon Ignaciuk
+ *
+ */
 public class HalfElementsParser {
 	private static final Logger logger = LoggerFactory.getLogger(HalfElementsParser.class.getName());
 	
@@ -125,7 +137,7 @@ public class HalfElementsParser {
 								attr = (AttributeRepresentation) sInt;
 								for(ParserListener pl : parserListeners){
 									pl.attributeName(attr.getStartsAt(), attr.getNameEndsAt());
-									pl.attributeEqualsSign(attr.getEqualsSignAt());
+									pl.attributeEqualsSign(attr.getEqualsSignPos());
 									pl.attributeValue(attr.getStartQuotationMarkAt(), attr.getEndQuotationMarkAt());
 								}
 							}
@@ -383,7 +395,7 @@ public class HalfElementsParser {
 							curAttr.setStartsAt(pre_cp.getPosition()+1);
 							curAttr.setNameEndsAt(cp.getPosition()-1);
 							curAttr.setName(new String(savedChars, curAttr.getStartsAt(), curAttr.getNameEndsAt()-curAttr.getStartsAt()+1));
-							curAttr.setEqualsSignAt(cp.getPosition());
+							curAttr.setEqualsSignPos(cp.getPosition());
 						}
 					}
 				}
@@ -495,7 +507,7 @@ public class HalfElementsParser {
 		}
 		// + ewentualny zamykający rawSlice
 		if(savedChars.length>0){
-			cp = new NoneControlPoint(savedChars.length-1);
+			cp = new RawAreaEndingControlPoint(savedChars.length-1);
 			insertRawSlice(cp);
 		}
 		return slicesR;
