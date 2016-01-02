@@ -8,7 +8,7 @@ import com.xzymon.xpath_searcher.core.exception.ParserException;
 import com.xzymon.xpath_searcher.core.listener.XMLNamespacesRemoveParserListener;
 import com.xzymon.xpath_searcher.core.parser.HalfElementsParser;
 
-public class XMLStreamConverter {
+public class XMLStreamConverter implements XPathSearchableStream  {
 	private HalfElementsParser parser;
 	private byte[] resultStream;
 	

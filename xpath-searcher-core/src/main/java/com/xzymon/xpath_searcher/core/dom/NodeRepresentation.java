@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.xzymon.xpath_searcher.core.exception.BuildingDOMException;
-import com.xzymon.xpath_searcher.core.exception.IsNotOpeningSliceRepresentationException;
+import com.xzymon.xpath_searcher.core.exception.IsNotOpeningTagException;
 import com.xzymon.xpath_searcher.core.parser.AttributeRepresentation;
 import com.xzymon.xpath_searcher.core.parser.HalfElementRepresentation;
 
@@ -26,13 +26,13 @@ public class NodeRepresentation {
 	private List<NodeRepresentation> children;
 	
 	
-	private NodeRepresentation(HalfElementRepresentation openingSlice, NodeRepresentation parent, String name) throws IsNotOpeningSliceRepresentationException{
+	private NodeRepresentation(HalfElementRepresentation openingSlice, NodeRepresentation parent, String name) throws IsNotOpeningTagException{
 		this.name = name;
 		this.parent = parent;
 		if(openingSlice!=null && openingSlice.isOpening()){
 			this.openingSlice = openingSlice;
 		} else {
-			throw new IsNotOpeningSliceRepresentationException("for name: "+name);
+			throw new IsNotOpeningTagException("for name: "+name);
 		}
 	}
 	

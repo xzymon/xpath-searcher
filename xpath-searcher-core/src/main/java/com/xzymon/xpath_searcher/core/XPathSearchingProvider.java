@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.NodeList;
 
 import com.xzymon.xpath_searcher.core.converter.HTMLStreamConverter;
+import com.xzymon.xpath_searcher.core.converter.XPathSearchableStream;
 import com.xzymon.xpath_searcher.core.exception.ParserException;
 import com.xzymon.xpath_searcher.core.listener.XPathSearchingListener;
 
@@ -138,7 +139,7 @@ public class XPathSearchingProvider {
 		 */
 
 		try {
-			HTMLStreamConverter htmlConverter = new HTMLStreamConverter(is);
+			XPathSearchableStream htmlConverter = new HTMLStreamConverter(is);
 			filteredIs = htmlConverter.getConvertedStream();
 			preparedBytes = prepareHtmlWithJsoup(filteredIs, standardCssElementsToRemove);
 		} catch (IOException e1) {

@@ -8,7 +8,7 @@ import com.xzymon.xpath_searcher.core.exception.ParserException;
 import com.xzymon.xpath_searcher.core.listener.OtherTagRemoveParserListener;
 import com.xzymon.xpath_searcher.core.parser.HalfElementsParser;
 
-public class HTMLStreamConverter {
+public class HTMLStreamConverter implements XPathSearchableStream {
 	private HalfElementsParser parser;
 	private byte[] resultStream;
 	
@@ -25,6 +25,10 @@ public class HTMLStreamConverter {
 		}
 	}
 	
+	/* (non-Javadoc)
+	 * @see com.xzymon.xpath_searcher.core.converter.XPathSearchableStream#getConvertedStream()
+	 */
+	@Override
 	public InputStream getConvertedStream(){
 		return new ByteArrayInputStream(resultStream);
 	}

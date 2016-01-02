@@ -107,11 +107,11 @@ public class XPathSearchingPanel extends JPanel{
 	}
 
 	public void loadHTML(InputStream is) {
-		searchPane.loadHTMLStream(is, null);
+		searchPane.loadHTMLStreamWithJSoup(is, null);
 	}
 
 	public void loadHTML(InputStream is, List<String> cssClassesToRemoveFromDoc) {
-		searchPane.loadHTMLStream(is, cssClassesToRemoveFromDoc);
+		searchPane.loadHTMLStreamWithJSoup(is, cssClassesToRemoveFromDoc);
 	}
 
 	public void loadStylesFromProperties(Properties props) {

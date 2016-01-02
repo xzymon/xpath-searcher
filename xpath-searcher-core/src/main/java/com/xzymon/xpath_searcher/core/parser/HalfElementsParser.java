@@ -29,7 +29,8 @@ import com.xzymon.xpath_searcher.core.listener.internal.SlashSignControlPoint;
 import com.xzymon.xpath_searcher.core.listener.internal.WhitespaceControlPoint;
 
 /**
- * Podstawowy parser analizujący plik w poszukiwaniu tagów, czyli fragmentów postaci:
+ * Podstawowy parser analizujący plik w poszukiwaniu tagów, czyli fragmentów
+ * postaci:
  * <ul>
  * <li>&lt;nazwa-tagu></li>
  * <li>&lt;nazwa-tagu/></li>
@@ -37,23 +38,24 @@ import com.xzymon.xpath_searcher.core.listener.internal.WhitespaceControlPoint;
  * <li>&lt;nazwa-tagu argument="wartość"/></li>
  * <li>&lt;/nazwa-tagu></li>
  * </ul>
+ * 
  * @author Szymon Ignaciuk
  *
  */
 public class HalfElementsParser {
 	private static final Logger logger = LoggerFactory.getLogger(HalfElementsParser.class.getName());
-	
+
 	private char[] savedChars = null;
 	private LinkedList<DetectorMode> modeList = null;
 	private LinkedList<ControlPoint> controlPoints = null;
 	private LinkedList<HalfElementRepresentation> slicesR = null;
-	
+
 	private List<ParserListener> parserListeners;
-	
-	public HalfElementsParser(InputStream is) throws ParserException{
-		try{
+
+	public HalfElementsParser(InputStream is) throws ParserException {
+		try {
 			int avail = is.available();
-			if(avail>0){
+			if (avail > 0) {
 				byte[] savedStream = new byte[avail];
 				is.read(savedStream);
 				ByteArrayInputStream bais = new ByteArrayInputStream(savedStream);
@@ -67,11 +69,11 @@ public class HalfElementsParser {
 		} catch (IOException e) {
 			e.printStackTrace();
 		} finally {
-			
+
 		}
 	}
-	
-	public HalfElementsParser(byte[] savedStream) throws IOException, ParserException{
+
+	public HalfElementsParser(byte[] savedStream) throws IOException, ParserException {
 		ByteArrayInputStream bais = new ByteArrayInputStream(savedStream);
 		InputStreamReader reader = new InputStreamReader(bais);
 		char[] charBuf = new char[savedStream.length];
@@ -80,142 +82,157 @@ public class HalfElementsParser {
 		System.arraycopy(charBuf, 0, savedChars, 0, read);
 		parse();
 	}
-	
-	public HalfElementsParser(char[] chars) throws ParserException{
+
+	public HalfElementsParser(char[] chars) throws ParserException {
 		this.savedChars = chars;
 		parse();
 	}
-	
-	private void parse() throws ParserException{
+
+	private void parse() throws ParserException {
 		findControlPoints();
 		getSlices();
 	}
-	
-	public void invokeListeners(){
+
+	public void invokeListeners() {
 		AttributeRepresentation attr = null;
 		ErrorRepresentation error = null;
-		
-		int gapStart=-1, gapEnd=-1;
+
+		int gapStart = -1, gapEnd = -1;
 		int slashPos;
 		int endPos;
-		
-		if(parserListeners!=null && parserListeners.size()>0){
-			for(HalfElementRepresentation sliceR: slicesR){
-				logger.debug(sliceR.toString());
-				
-				//TODO: here
-				if(sliceR.isRaw()){
-					for(ParserListener pl : parserListeners){
-						pl.rawText(sliceR.getStartPosition(), sliceR.getEndPosition());
-					}
-				} else if(sliceR.isOther()){
-					for(ParserListener pl : parserListeners){
-						pl.otherTag(sliceR.getStartPosition(), sliceR.getEndPosition());
-					}
-				} else {
-					for(ParserListener pl : parserListeners){
-						pl.lessThanStartChar(sliceR.getStartPosition());
-					}
-					if(sliceR.isClosing()){
-						for(ParserListener pl : parserListeners){
-							pl.closingSlash(sliceR.getClosingSlashPosition());
+
+		if (parserListeners != null && parserListeners.size() > 0) {
+			
+				for (HalfElementRepresentation sliceR : slicesR) {
+					try {
+					logger.debug(sliceR.toString());
+
+					// TODO: here
+					if (sliceR.isRaw()) {
+						for (ParserListener pl : parserListeners) {
+							pl.rawText(sliceR.getStartPosition(), sliceR.getEndPosition());
 						}
-					}
-					for(ParserListener pl : parserListeners){
-						pl.tagName(sliceR.getNameStartPosition(), sliceR.getNameEndPosition());
-					}
-					gapStart = sliceR.getNameEndPosition()+1;
-					if(sliceR.getInterior()!=null){
-						for(ElementInterior sInt : sliceR.getInterior()){
-							gapEnd = sInt.getStartPosition()-1;
-							if(gapEnd>=gapStart){
-								for(ParserListener pl : parserListeners){
-									pl.tagGap(gapStart, gapEnd);
+					} else if (sliceR.isOther()) {
+						for (ParserListener pl : parserListeners) {
+							pl.otherTag(sliceR.getStartPosition(), sliceR.getEndPosition());
+						}
+					} else {
+						for (ParserListener pl : parserListeners) {
+							pl.lessThanStartChar(sliceR.getStartPosition());
+						}
+						if (sliceR.isClosing()) {
+							for (ParserListener pl : parserListeners) {
+								pl.closingSlash(sliceR.getClosingSlashPosition());
+							}
+						}
+						for (ParserListener pl : parserListeners) {
+							//logger.info("tagName: startPos="+ sliceR.getNameStartPosition() + ", endPos="+ sliceR.getNameEndPosition());
+							pl.tagName(sliceR.getNameStartPosition(), sliceR.getNameEndPosition());
+						}
+						gapStart = sliceR.getNameEndPosition() + 1;
+						if (sliceR.getInterior() != null) {
+							for (ElementInterior sInt : sliceR.getInterior()) {
+								gapEnd = sInt.getStartPosition() - 1;
+								if (gapEnd >= gapStart) {
+									for (ParserListener pl : parserListeners) {
+										pl.tagGap(gapStart, gapEnd);
+									}
+								}
+								if (sInt instanceof AttributeRepresentation) {
+									attr = (AttributeRepresentation) sInt;
+									for (ParserListener pl : parserListeners) {
+										pl.attributeName(attr.getStartsAt(), attr.getNameEndsAt());
+										pl.attributeEqualsSign(attr.getEqualsSignPos());
+										pl.attributeValue(attr.getStartQuotationMarkAt(), attr.getEndQuotationMarkAt());
+									}
+								}
+								if (sInt instanceof ErrorRepresentation) {
+									error = (ErrorRepresentation) sInt;
+									for (ParserListener pl : parserListeners) {
+										pl.error(error.getStartPosition(), error.getEndPosition());
+									}
+								}
+								gapStart = sInt.getEndPosition() + 1;
+							}
+						}
+						// trzeba obsługiwać ewentualną przerwę przed
+						// znakiem/znakami kończącym
+						if (sliceR.isSelfClosing()) {
+							slashPos = sliceR.getClosingSlashPosition();
+							if (slashPos > gapStart) {
+								for (ParserListener pl : parserListeners) {
+									pl.tagGap(gapStart, slashPos - 1);
+								}
+								gapStart = slashPos + 1;
+							}
+							for (ParserListener pl : parserListeners) {
+								pl.closingSlash(sliceR.getClosingSlashPosition());
+							}
+						}
+						//
+						else {
+							endPos = sliceR.getEndPosition();
+							if (endPos > gapStart) {
+								for (ParserListener pl : parserListeners) {
+									pl.tagGap(gapStart, endPos - 1);
 								}
 							}
-							if(sInt instanceof AttributeRepresentation){
-								attr = (AttributeRepresentation) sInt;
-								for(ParserListener pl : parserListeners){
-									pl.attributeName(attr.getStartsAt(), attr.getNameEndsAt());
-									pl.attributeEqualsSign(attr.getEqualsSignPos());
-									pl.attributeValue(attr.getStartQuotationMarkAt(), attr.getEndQuotationMarkAt());
-								}
-							}
-							if(sInt instanceof ErrorRepresentation){
-								error = (ErrorRepresentation) sInt;
-								for(ParserListener pl : parserListeners){
-									pl.error(error.getStartPosition(), error.getEndPosition());
-								}
-							}
-							gapStart = sInt.getEndPosition()+1;
+						}
+						//
+						for (ParserListener pl : parserListeners) {
+							pl.greaterThanEndingChar(sliceR.getEndPosition());
 						}
 					}
-					//trzeba obsługiwać ewentualną przerwę przed znakiem/znakami kończącym 
-					if(sliceR.isSelfClosing()){
-						slashPos = sliceR.getClosingSlashPosition();
-						if(slashPos>gapStart){
-							for(ParserListener pl : parserListeners){
-								pl.tagGap(gapStart, slashPos-1);
-							}
-							gapStart = slashPos+1;
-						}
-						for(ParserListener pl : parserListeners){
-							pl.closingSlash(sliceR.getClosingSlashPosition());
-						}
-					}
-					//
-					else {
-						endPos = sliceR.getEndPosition();
-						if(endPos>gapStart){
-							for(ParserListener pl : parserListeners){
-								pl.tagGap(gapStart, endPos-1);
-							}
-						}
-					}
-					//
-					for(ParserListener pl : parserListeners){
-						pl.greaterThanEndingChar(sliceR.getEndPosition());
-					}
+				}catch (RuntimeException re) {
+					logger.error("SliceR state is: " + sliceR.toString());
+					logger.error("Now - rethrowing ...");
+					throw re;
 				}
-			}
+			} 
 		}
 	}
-	
-	public NodeRepresentation buildStructure() throws BuildingDOMException{
+
+	public NodeRepresentation buildStructure() throws BuildingDOMException {
 		return NodeRepresentation.buildStructure(slicesR, savedChars);
 	}
 	
-	private List<HalfElementRepresentation> getSlices() throws ParserException{
+	public List<HalfElementRepresentation> getHalfElementsList(){
+		return slicesR;
+	}
+
+	private List<HalfElementRepresentation> getSlices() throws ParserException {
 		modeList = new LinkedList<DetectorMode>();
-		
+
 		HalfElementRepresentation curSlice = null;
 		AttributeRepresentation curAttr = null;
 		ErrorRepresentation curError = null;
 		slicesR = new LinkedList<HalfElementRepresentation>();
-		
+
 		boolean reinvoke = false;
 		boolean dropAttr = false;
-		
+
 		modeList.addLast(DetectorMode.NONE);
-				
-		//findControlPoints();
+
+		// findControlPoints();
 		int cplength = controlPoints.size();
 		ControlPoint cp = null;
 		ControlPoint pre_cp = null;
 		// for bo trzeba się odwoływać do poprzednich/następnych elementów listy
-		for(int cploop=0; cploop<cplength; cploop++){
-			if(modeList.getLast()==DetectorMode.ERROR){
-				logger.info(String.format("error detected at %1$d on char=%2$d ['%3$s']", cp.getPosition(), (int)cp.getChar(), cp.getChar()));
+		for (int cploop = 0; cploop < cplength; cploop++) {
+			if (modeList.getLast() == DetectorMode.ERROR) {
+				logger.info(String.format("error detected at %1$d on char=%2$d ['%3$s']", cp.getPosition(),
+						(int) cp.getChar(), cp.getChar()));
 			}
 			pre_cp = cp;
 			cp = controlPoints.get(cploop);
-			
+
 			logger.debug(String.format("curSlice is %1$s, mode is %2$s, pos=%3$d, ch=[%4$s]",
-					curSlice==null?"null":"not null", modeList.getLast().toString(), cp.getPosition(), cp.getChar()));
-			
-			switch(cp.getChar()){
+					curSlice == null ? "null" : "not null", modeList.getLast().toString(), cp.getPosition(),
+					cp.getChar()));
+
+			switch (cp.getChar()) {
 			case '<':
-				switch(modeList.getLast()){
+				switch (modeList.getLast()) {
 				case NONE:
 					insertRawSlice(cp);
 					curSlice = new HalfElementRepresentation();
@@ -229,33 +246,36 @@ public class HalfElementsParser {
 					modeList.addLast(DetectorMode.ERROR);
 					break;
 				default:
-					break;	
+					break;
 				}
 				break;
 			case '>':
-				//invoke/reinvoke jest na potrzeby obsłużenia za jednym razem zejścia z INSIDE_ATTRIBUTE i INSIDE_SLICE
-				//zmienione z if'ów na switch-case na potrzeby ewentualnej rozbudowy (przypuszczanie obsługa błędów)
+				// invoke/reinvoke jest na potrzeby obsłużenia za jednym razem
+				// zejścia z INSIDE_ATTRIBUTE i INSIDE_SLICE
+				// zmienione z if'ów na switch-case na potrzeby ewentualnej
+				// rozbudowy (przypuszczanie obsługa błędów)
 				do {
 					reinvoke = false;
-					switch(modeList.getLast()){
+					switch (modeList.getLast()) {
 					case INSIDE_ATTRIBUTE:
-						if(curAttr!=null){
-							if(curAttr.getNameEndsAt()==-1){
-								curAttr.setNameEndsAt(cp.getPosition()-1);
+						if (curAttr != null) {
+							if (curAttr.getNameEndsAt() == -1) {
+								curAttr.setNameEndsAt(cp.getPosition() - 1);
 							}
 						}
 						modeList.removeLast();
 						reinvoke = true;
 						break;
 					case INSIDE_HALF_ELEMENT:
-						if(pre_cp.getChar()=='/' && pre_cp.getPosition()==cp.getPosition()-1){
-							if(curSlice.getClosingSlashPosition()==-1){
+						if (pre_cp.getChar() == '/' && pre_cp.getPosition() == cp.getPosition() - 1) {
+							if (curSlice.getClosingSlashPosition() == -1) {
 								curSlice.setClosingSlashPosition(pre_cp.getPosition());
 							}
 						}
-						if(pre_cp.getPosition()<cp.getPosition()-1 && (pre_cp.getChar()=='<' || pre_cp.getChar()=='/')){
-							curSlice.setNameStartPosition(pre_cp.getPosition()+1);
-							curSlice.setNameEndPosition(cp.getPosition()-1);
+						if (pre_cp.getPosition() < cp.getPosition() - 1
+								&& (pre_cp.getChar() == '<' || pre_cp.getChar() == '/')) {
+							curSlice.setNameStartPosition(pre_cp.getPosition() + 1);
+							curSlice.setNameEndPosition(cp.getPosition() - 1);
 							curSlice.setEndPosition(cp.getPosition());
 						}
 						curSlice.setEndPosition(cp.getPosition());
@@ -273,12 +293,12 @@ public class HalfElementsParser {
 				} while (reinvoke);
 				break;
 			case '\"':
-				if(curSlice!=null && !curSlice.isOther()){
-					do{
-						reinvoke=false;
-						switch(modeList.getLast()){
+				if (curSlice != null && !curSlice.isOther()) {
+					do {
+						reinvoke = false;
+						switch (modeList.getLast()) {
 						case NONE:
-							//modeList.addLast(SlicerMode.INSIDE_DOUBLE_QUOTES);
+							// modeList.addLast(SlicerMode.INSIDE_DOUBLE_QUOTES);
 							break;
 						case INSIDE_HALF_ELEMENT:
 							modeList.addLast(DetectorMode.INSIDE_DOUBLE_QUOTES);
@@ -286,7 +306,7 @@ public class HalfElementsParser {
 						case INSIDE_DOUBLE_QUOTES:
 							// wycofaj tryb
 							modeList.removeLast();
-							if(curAttr!=null){
+							if (curAttr != null) {
 								curAttr.setEndQuotationMarkAt(cp.getPosition());
 							}
 							curSlice.addAttribute(curAttr);
@@ -296,11 +316,12 @@ public class HalfElementsParser {
 							dropAttr = true;
 							break;
 						case INSIDE_ATTRIBUTE:
-							if(dropAttr){
+							if (dropAttr) {
 								modeList.removeLast();
 								dropAttr = false;
 							} else {
-								if(pre_cp!=null && pre_cp.getChar()=='=' && pre_cp.getPosition()==cp.getPosition()-1){
+								if (pre_cp != null && pre_cp.getChar() == '='
+										&& pre_cp.getPosition() == cp.getPosition() - 1) {
 									modeList.addLast(DetectorMode.INSIDE_DOUBLE_QUOTES);
 									curAttr.setDoubleQuoted(true);
 									curAttr.setStartQuotationMarkAt(cp.getPosition());
@@ -310,16 +331,16 @@ public class HalfElementsParser {
 						default:
 							break;
 						}
-					} while(reinvoke);
+					} while (reinvoke);
 				}
 				break;
 			case '\'':
-				if(curSlice!=null && !curSlice.isOther()){
-					do{
-						reinvoke=false;
-						switch(modeList.getLast()){
+				if (curSlice != null && !curSlice.isOther()) {
+					do {
+						reinvoke = false;
+						switch (modeList.getLast()) {
 						case NONE:
-							//modeList.addLast(SlicerMode.INSIDE_SINGLE_QUOTES);
+							// modeList.addLast(SlicerMode.INSIDE_SINGLE_QUOTES);
 							break;
 						case INSIDE_HALF_ELEMENT:
 							modeList.addLast(DetectorMode.INSIDE_SINGLE_QUOTES);
@@ -327,7 +348,7 @@ public class HalfElementsParser {
 						case INSIDE_SINGLE_QUOTES:
 							// wycofaj tryb
 							modeList.removeLast();
-							if(curAttr!=null){
+							if (curAttr != null) {
 								curAttr.setEndQuotationMarkAt(cp.getPosition());
 							}
 							curSlice.addAttribute(curAttr);
@@ -337,11 +358,12 @@ public class HalfElementsParser {
 							dropAttr = true;
 							break;
 						case INSIDE_ATTRIBUTE:
-							if(dropAttr){
+							if (dropAttr) {
 								modeList.removeLast();
 								dropAttr = false;
 							} else {
-								if(pre_cp!=null && pre_cp.getChar()=='=' && pre_cp.getPosition()==cp.getPosition()-1){
+								if (pre_cp != null && pre_cp.getChar() == '='
+										&& pre_cp.getPosition() == cp.getPosition() - 1) {
 									modeList.addLast(DetectorMode.INSIDE_DOUBLE_QUOTES);
 									curAttr.setSingleQuoted(true);
 									curAttr.setStartQuotationMarkAt(cp.getPosition());
@@ -351,24 +373,27 @@ public class HalfElementsParser {
 						default:
 							break;
 						}
-					} while(reinvoke);
+					} while (reinvoke);
 				}
 				break;
 			case '/':
-				if(curSlice!=null && !curSlice.isOther()){
+				/* zabezpieczenie na wypadek zwalenia kodu
+				if (curSlice != null && !curSlice.isOther()) {
 					do {
 						reinvoke = false;
-						switch(modeList.getLast()){
+						switch (modeList.getLast()) {
 						case INSIDE_ATTRIBUTE:
 							modeList.removeLast();
 							curAttr = null;
 							reinvoke = true;
 							break;
-						// sprawdzenie czy to ma jakiekolwiek znaczenie - jedynie w INSIDE_SLICE
-						// sprawdzanie tylko wstecz - więc do sprawdzenia tylko jedna opcja
+						// sprawdzenie czy to ma jakiekolwiek znaczenie -
+						// jedynie w INSIDE_SLICE
+						// sprawdzanie tylko wstecz - więc do sprawdzenia tylko
+						// jedna opcja
 						case INSIDE_HALF_ELEMENT:
-							if(pre_cp.getPosition()==cp.getPosition()-1 && pre_cp.getChar()=='<'){
-								if(curSlice.getClosingSlashPosition()==-1){
+							if (pre_cp.getPosition() == cp.getPosition() - 1 && pre_cp.getChar() == '<') {
+								if (curSlice.getClosingSlashPosition() == -1) {
 									curSlice.setClosingSlashPosition(cp.getPosition());
 								}
 							}
@@ -383,18 +408,62 @@ public class HalfElementsParser {
 						}
 					} while (reinvoke);
 				}
+				break;*/
+				if (curSlice != null && !curSlice.isOther()) {
+					do {
+						reinvoke = false;
+						switch (modeList.getLast()) {
+						case INSIDE_ATTRIBUTE:
+							modeList.removeLast();
+							curAttr = null;
+							reinvoke = true;
+							break;
+						// sprawdzenie czy to ma jakiekolwiek znaczenie -
+						// jedynie w INSIDE_SLICE
+						// sprawdzanie tylko wstecz - więc do sprawdzenia tylko
+						// jedna opcja
+						case INSIDE_HALF_ELEMENT:
+							if (pre_cp.getPosition() == cp.getPosition() - 1 && pre_cp.getChar() == '<') {
+								// sytuacja postaci ...</...
+								if (curSlice.getClosingSlashPosition() == -1) {
+									curSlice.setClosingSlashPosition(cp.getPosition());
+								}
+							}
+							if (pre_cp.getPosition() < cp.getPosition() - 1 && pre_cp.getChar() == '<') {
+								// sytuacja postaci ...<ttt/.... czyli zamknięcie na końcu
+								/* to zostanie załatwione przez kod obslugi .../>... wywołany dla >
+								if (curSlice.getClosingSlashPosition() == -1) {
+									curSlice.setClosingSlashPosition(cp.getPosition());
+								}*/
+								curSlice.setNameStartPosition(pre_cp.getPosition()+1);
+								curSlice.setNameEndPosition(cp.getPosition()-1);
+							}
+							break;
+						case ERROR:
+							modeList.removeLast();
+							regainError(cp, curError, curSlice);
+							pre_cp = getPreviousControlPointFrom(pre_cp);
+							reinvoke = true;
+						default:
+							break;
+						}
+					} while (reinvoke);
+				}
 				break;
 			case '=':
-				if(curSlice!=null && !curSlice.isOther()){
+				if (curSlice != null && !curSlice.isOther()) {
 					// powinno mieć znaczenie tylko przy INSIDE_ATTRIBUTE
-					// jeśli poprzedni znak na liście jest whitespace i nie jest bezpośrednio poprzedni to  włącz tryb INSIDE_ATTRIBUTE
-					if(modeList.getLast().equals(DetectorMode.INSIDE_HALF_ELEMENT)){
-						if(pre_cp!=null && pre_cp instanceof WhitespaceControlPoint && pre_cp.getPosition()<cp.getPosition()-1){
+					// jeśli poprzedni znak na liście jest whitespace i nie jest
+					// bezpośrednio poprzedni to włącz tryb INSIDE_ATTRIBUTE
+					if (modeList.getLast().equals(DetectorMode.INSIDE_HALF_ELEMENT)) {
+						if (pre_cp != null && pre_cp instanceof WhitespaceControlPoint
+								&& pre_cp.getPosition() < cp.getPosition() - 1) {
 							modeList.addLast(DetectorMode.INSIDE_ATTRIBUTE);
 							curAttr = new AttributeRepresentation();
-							curAttr.setStartsAt(pre_cp.getPosition()+1);
-							curAttr.setNameEndsAt(cp.getPosition()-1);
-							curAttr.setName(new String(savedChars, curAttr.getStartsAt(), curAttr.getNameEndsAt()-curAttr.getStartsAt()+1));
+							curAttr.setStartsAt(pre_cp.getPosition() + 1);
+							curAttr.setNameEndsAt(cp.getPosition() - 1);
+							curAttr.setName(new String(savedChars, curAttr.getStartsAt(),
+									curAttr.getNameEndsAt() - curAttr.getStartsAt() + 1));
 							curAttr.setEqualsSignPos(cp.getPosition());
 						}
 					}
@@ -405,16 +474,17 @@ public class HalfElementsParser {
 			case '\n':
 			case '\r':
 			case '\f':
-				if(curSlice!=null && !curSlice.isOther()){
+				if (curSlice != null && !curSlice.isOther()) {
 					do {
 						reinvoke = false;
-						switch(modeList.getLast()){
-						// jeśli tryb INSIDE_ATTRIBUTE to powinno go wyłączać i konstruować/aktualizować ostatni SliceAttribute
+						switch (modeList.getLast()) {
+						// jeśli tryb INSIDE_ATTRIBUTE to powinno go wyłączać i
+						// konstruować/aktualizować ostatni SliceAttribute
 						case INSIDE_ATTRIBUTE:
 							modeList.removeLast();
 							curError = new ErrorRepresentation();
 							curError.setStartPosition(curAttr.getStartsAt());
-							curError.setEndPosition(cp.getPosition()-1);
+							curError.setEndPosition(cp.getPosition() - 1);
 							curAttr = null;
 							curSlice.addError(curError);
 							logger.info("Attribute converted to ERROR");
@@ -422,25 +492,29 @@ public class HalfElementsParser {
 							reinvoke = true;
 							break;
 						case INSIDE_HALF_ELEMENT:
-							if(pre_cp.getPosition()<cp.getPosition()-1 && ((pre_cp.getChar()=='<' /*&& curSlice.getStartPosition()!=pre_cp.getPosition()*/) || pre_cp.getChar()=='/')){
-								curSlice.setNameStartPosition(pre_cp.getPosition()+1);
-								curSlice.setNameEndPosition(cp.getPosition()-1);
+							if (pre_cp.getPosition() < cp.getPosition() - 1 && ((pre_cp.getChar() == '<' 
+							/* && curSlice.getStartPosition()!=pre_cp.getPosition()*/) || pre_cp.getChar() == '/')) {
+								curSlice.setNameStartPosition(pre_cp.getPosition() + 1);
+								curSlice.setNameEndPosition(cp.getPosition() - 1);
 							}
-							if(pre_cp.getPosition()<cp.getPosition()-1 && 
-									(pre_cp.getChar()==' ' || pre_cp.getChar()=='\t' || pre_cp.getChar()=='\n' 
-									|| pre_cp.getChar()=='\r' || pre_cp.getChar()=='\f' )){
+							if (pre_cp.getPosition() < cp.getPosition() - 1
+									&& (pre_cp.getChar() == ' ' || pre_cp.getChar() == '\t' || pre_cp.getChar() == '\n'
+											|| pre_cp.getChar() == '\r' || pre_cp.getChar() == '\f')) {
 								curError = new ErrorRepresentation();
-								curError.setStartPosition(pre_cp.getPosition()+1);
-								curError.setEndPosition(cp.getPosition()-1);
-								logger.info(String.format("ERROR: startPos=%1$d, endPos=%2$d", curError.getStartPosition(), curError.getEndPosition()));
+								curError.setStartPosition(pre_cp.getPosition() + 1);
+								curError.setEndPosition(cp.getPosition() - 1);
+								logger.info(String.format("ERROR: startPos=%1$d, endPos=%2$d",
+										curError.getStartPosition(), curError.getEndPosition()));
 								curSlice.addError(curError);
 								curSlice.addInterior(curError);
 							}
-							if(pre_cp.getPosition()<cp.getPosition()-1 && (pre_cp.getChar()=='<' && curSlice.getStartPosition()!=pre_cp.getPosition())){
+							if (pre_cp.getPosition() < cp.getPosition() - 1 && (pre_cp.getChar() == '<'
+									&& curSlice.getStartPosition() != pre_cp.getPosition())) {
 								curError = new ErrorRepresentation();
-								curError.setStartPosition(pre_cp.getPosition()+1);
-								curError.setEndPosition(cp.getPosition()-1);
-								logger.info(String.format("ERROR: startPos=%1$d, endPos=%2$d", curError.getStartPosition(), curError.getEndPosition()));
+								curError.setStartPosition(pre_cp.getPosition() + 1);
+								curError.setEndPosition(cp.getPosition() - 1);
+								logger.info(String.format("ERROR: startPos=%1$d, endPos=%2$d",
+										curError.getStartPosition(), curError.getEndPosition()));
 								curSlice.addError(curError);
 								curSlice.addInterior(curError);
 							}
@@ -457,25 +531,27 @@ public class HalfElementsParser {
 				}
 				break;
 			case '?':
-				if(curSlice!=null && !curSlice.isOther()){
+				if (curSlice != null && !curSlice.isOther()) {
 					do {
 						reinvoke = false;
-						switch(modeList.getLast()){
-						// jeśli tryb INSIDE_ATTRIBUTE to powinno go wyłączać i konstruować/aktualizować ostatni SliceAttribute
+						switch (modeList.getLast()) {
+						// jeśli tryb INSIDE_ATTRIBUTE to powinno go wyłączać i
+						// konstruować/aktualizować ostatni SliceAttribute
 						case INSIDE_ATTRIBUTE:
 							modeList.removeLast();
 							curError = new ErrorRepresentation();
 							curError.setStartPosition(curAttr.getStartsAt());
-							curError.setEndPosition(cp.getPosition()-1);
+							curError.setEndPosition(cp.getPosition() - 1);
 							curAttr = null;
 							curSlice.addError(curError);
 							curSlice.addInterior(curError);
 							modeList.addLast(DetectorMode.ERROR);
 							reinvoke = true;
 							break;
-						// ma znaczenie dla deklaracji XML lub kodu php - gdy poprzedza go <
+						// ma znaczenie dla deklaracji XML lub kodu php - gdy
+						// poprzedza go <
 						case INSIDE_HALF_ELEMENT:
-							if(pre_cp.getPosition()==cp.getPosition()-1 && pre_cp.getChar()=='<'){
+							if (pre_cp.getPosition() == cp.getPosition() - 1 && pre_cp.getChar() == '<') {
 								curSlice.setOther(true);
 							}
 							break;
@@ -491,10 +567,11 @@ public class HalfElementsParser {
 				}
 				break;
 			case '!':
-				if(curSlice!=null && !curSlice.isOther()){
-					// ma znaczenie tylko dla deklaracji DTD - gdy poprzedza go <
-					if(modeList.getLast().equals(DetectorMode.INSIDE_HALF_ELEMENT)){
-						if(pre_cp.getPosition()==cp.getPosition()-1 && pre_cp.getChar()=='<'){
+				if (curSlice != null && !curSlice.isOther()) {
+					// ma znaczenie tylko dla deklaracji DTD - gdy poprzedza go
+					// <
+					if (modeList.getLast().equals(DetectorMode.INSIDE_HALF_ELEMENT)) {
+						if (pre_cp.getPosition() == cp.getPosition() - 1 && pre_cp.getChar() == '<') {
 							logger.info("detecting slice of type \"other\"");
 							curSlice.setOther(true);
 						}
@@ -502,26 +579,27 @@ public class HalfElementsParser {
 				}
 				break;
 			default:
-				// powinno przełączać w tryb INSIDE_ATTRIBUTE jeśli poprzedni znak to spacja
+				// powinno przełączać w tryb INSIDE_ATTRIBUTE jeśli poprzedni
+				// znak to spacja
 			}
 		}
 		// + ewentualny zamykający rawSlice
-		if(savedChars.length>0){
-			cp = new RawAreaEndingControlPoint(savedChars.length-1);
-			insertRawSlice(cp);
+		if (savedChars.length > 0) {
+			cp = new RawAreaEndingControlPoint(savedChars.length - 1);
+			insertEndingRawSlice(cp);
 		}
 		return slicesR;
 	}
-	
-	private void findControlPoints(){
+
+	private void findControlPoints() {
 		controlPoints = new LinkedList<ControlPoint>();
 		char read_ch;
-		int pos=0;
+		int pos = 0;
 
-		if(savedChars != null){
-			while(pos<savedChars.length){
+		if (savedChars != null) {
+			while (pos < savedChars.length) {
 				read_ch = savedChars[pos];
-				switch(read_ch){
+				switch (read_ch) {
 				case '<':
 					controlPoints.add(new LessThanControlPoint(pos));
 					break;
@@ -545,10 +623,11 @@ public class HalfElementsParser {
 				case '\n':
 				case '\r':
 				case '\f':
-					try{
+					try {
 						controlPoints.add(new WhitespaceControlPoint(pos, read_ch));
-					} catch (InvalidCharacterException ex){
-						logger.error(String.format("%1$s: %2$s at %3$d", ex.getClass().getName(), ex.getMessage(), pos));
+					} catch (InvalidCharacterException ex) {
+						logger.error(
+								String.format("%1$s: %2$s at %3$d", ex.getClass().getName(), ex.getMessage(), pos));
 					}
 					break;
 				case '?':
@@ -563,19 +642,19 @@ public class HalfElementsParser {
 		}
 	}
 
-	private void insertRawSlice(ControlPoint cp){
+	private void insertRawSlice(ControlPoint cp) {
 		// justAfterEnding is after previous Slice
 		int justAfterEnding = 0;
 		// justBeforeBegining is before this Slice
 		int justBeforeBegining = -1;
 		HalfElementRepresentation rawSlice = null;
-		
-		justBeforeBegining = cp.getPosition()-1;
-		if(justAfterEnding<=justBeforeBegining && justBeforeBegining>-1){
-			if(slicesR.size()>0){
-				justAfterEnding=slicesR.getLast().getEndPosition()+1;
-			} 
-			if(justBeforeBegining>=justAfterEnding){
+
+		justBeforeBegining = cp.getPosition() - 1;
+		if (justAfterEnding <= justBeforeBegining && justBeforeBegining > -1) {
+			if (slicesR.size() > 0) {
+				justAfterEnding = slicesR.getLast().getEndPosition() + 1;
+			}
+			if (justBeforeBegining >= justAfterEnding) {
 				rawSlice = new HalfElementRepresentation();
 				rawSlice.setRaw(true);
 				rawSlice.setStartPosition(justAfterEnding);
@@ -585,6 +664,28 @@ public class HalfElementsParser {
 		}
 	}
 	
+	private void insertEndingRawSlice(ControlPoint cp) {
+		// justAfterEnding is after previous Slice
+		int justAfterEnding = 0;
+		// justBeforeBegining is before this Slice
+		int justBeforeBegining = -1;
+		HalfElementRepresentation rawSlice = null;
+
+		justBeforeBegining = cp.getPosition();
+		if (justAfterEnding <= justBeforeBegining && justBeforeBegining > -1) {
+			if (slicesR.size() > 0) {
+				justAfterEnding = slicesR.getLast().getEndPosition() + 1;
+			}
+			if (justBeforeBegining >= justAfterEnding) {
+				rawSlice = new HalfElementRepresentation();
+				rawSlice.setRaw(true);
+				rawSlice.setStartPosition(justAfterEnding);
+				rawSlice.setEndPosition(justBeforeBegining);
+				slicesR.addLast(rawSlice);
+			}
+		}
+	}
+
 	public char[] getSavedChars() {
 		return savedChars;
 	}
@@ -599,54 +700,56 @@ public class HalfElementsParser {
 		}
 	}
 
-	private ControlPoint getPreviousControlPointFrom(ControlPoint toFind){
+	private ControlPoint getPreviousControlPointFrom(ControlPoint toFind) {
 		ControlPoint result = null;
-		if(toFind!=null){
+		if (toFind != null) {
 			ControlPoint cp = null;
 			ListIterator<ControlPoint> li = controlPoints.listIterator();
-			while(cp!=toFind && li.hasNext()){
+			while (cp != toFind && li.hasNext()) {
 				cp = li.next();
 			}
-			if(cp==toFind && li.hasPrevious()){
+			if (cp == toFind && li.hasPrevious()) {
 				result = li.previous();
 			}
 		}
 		return result;
 	}
 
-	public List<ParserListener> getParserListeners(){
+	public List<ParserListener> getParserListeners() {
 		return this.parserListeners;
 	}
-	
-	public void addParserListener(ParserListener listener){
-		if(parserListeners==null){
+
+	public void addParserListener(ParserListener listener) {
+		if (parserListeners == null) {
 			parserListeners = new LinkedList<ParserListener>();
 		}
-		if(!parserListeners.contains(listener)){
+		if (!parserListeners.contains(listener)) {
 			parserListeners.add(listener);
 		}
 	}
-	
-	public void removeParserListener(ParserListener listener){
-		if(parserListeners!=null){
+
+	public void removeParserListener(ParserListener listener) {
+		if (parserListeners != null) {
 			parserListeners.remove(listener);
 		}
 	}
-	
-	private ControlPoint regainError(ControlPoint cp, ErrorRepresentation curError, HalfElementRepresentation curSlice){
-		logger.info(String.format("regaining error at %1$d on char=%2$d ['%3$s']", cp.getPosition(), (int)cp.getChar(), cp.getChar()));
-		curError.setEndPosition(cp.getPosition()-1);
+
+	private ControlPoint regainError(ControlPoint cp, ErrorRepresentation curError,
+			HalfElementRepresentation curSlice) {
+		logger.info(String.format("regaining error at %1$d on char=%2$d ['%3$s']", cp.getPosition(), (int) cp.getChar(),
+				cp.getChar()));
+		curError.setEndPosition(cp.getPosition() - 1);
 		curSlice.addError(curError);
 		curSlice.addInterior(curError);
 		return cp;
 	}
-	
-	public void logReport(){
+
+	public void logReport() {
 		for (ControlPoint controlPoint : controlPoints) {
 			logger.info(String.format("%1$d = %2$s", controlPoint.getPosition(), controlPoint.getChar()));
 		}
 	}
-	
+
 	enum DetectorMode {
 		NONE, INSIDE_HALF_ELEMENT, INSIDE_DOUBLE_QUOTES, INSIDE_SINGLE_QUOTES, INSIDE_ATTRIBUTE, ERROR, REGAIN_ERROR
 	}

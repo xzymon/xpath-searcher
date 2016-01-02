@@ -1,7 +1,6 @@
 package com.xzymon.xpath_searcher.core.listener;
 
-
-public class OtherTagRemoveParserListener implements ParserListener {
+public class OtherTagRemoveParserListener implements RemoveParserListener {
 	private StringBuilder collector;
 	private char[] data;
 	

@@ -215,4 +215,16 @@ public class AttributeRepresentation implements ElementInterior {
 				+ singleQuoted + ", doubleQuoted=" + doubleQuoted + "]";
 	}
 	
+	public StringBuffer stringifyAsStringBuffer(char[] chars){
+		if(isValid()){
+			StringBuffer sb = new StringBuffer();
+			sb.append(chars, startsAt, nameEndsAt-startsAt+1);
+			sb.append('=');
+			sb.append('\"');
+			sb.append(chars, startQuotationMarkAt+1, endQuotationMarkAt-1-(startQuotationMarkAt+1)+1);
+			sb.append('\"');
+			return sb;
+		}
+		return null;
+	}
 }

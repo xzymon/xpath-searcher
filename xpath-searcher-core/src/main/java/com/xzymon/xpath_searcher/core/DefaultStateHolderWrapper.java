@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.xzymon.xpath_searcher.core.converter.HTMLStreamConverter;
 import com.xzymon.xpath_searcher.core.converter.XMLStreamConverter;
+import com.xzymon.xpath_searcher.core.converter.XPathSearchableStream;
 import com.xzymon.xpath_searcher.core.exception.ParserException;
 
 public class DefaultStateHolderWrapper extends AbstractStateHolderWrapper {
@@ -77,7 +78,7 @@ public class DefaultStateHolderWrapper extends AbstractStateHolderWrapper {
 		*/
 		
 		try{
-			HTMLStreamConverter htmlConverter = new HTMLStreamConverter(is);
+			XPathSearchableStream htmlConverter = new HTMLStreamConverter(is);
 			filteredIs = htmlConverter.getConvertedStream();
 			preparedIs = prepareHtmlWithJsoup(filteredIs, standardCssElementsToRemove);
 			result = loadStream(preparedIs);

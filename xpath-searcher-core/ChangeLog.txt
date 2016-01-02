@@ -1,3 +1,11 @@
+[v 0.1.3.Final] [02-01-2016]
++ core.dom package - to represent DOM structure built (and dependent on) on the base of (binary) file): 
+  * DocumentTreeRepresentation - representing [XML/HTML] Document Tree - capable to fix document structure,
+  * DocumentNodeRepresentation - extended
+  * the rest of the package consists of classes for internal processing of building and fixing DocumentTreeRepresentation
++ javadoc for core.dom package,
++ DocumentTreeRepresentation is tested.
+
 [v 0.1.2.Final] [13-12-2015]
 \ a change in POM file.
 

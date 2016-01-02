@@ -1,6 +1,6 @@
 package com.xzymon.xpath_searcher.core.listener;
 
-public class XMLNamespacesRemoveParserListener implements ParserListener {
+public class XMLNamespacesRemoveParserListener implements RemoveParserListener {
 	private StringBuilder collector;
 	private char[] data;
 	

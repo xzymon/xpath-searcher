@@ -71,12 +71,9 @@ public class HalfElementRepresentation {
 		this.closingSlashAt = pos;
 	}
 	/**
-	 * Testuje czy jest to tag zawierający istotny znak / 
-	 * - czyli w założeniach - drugi z obszarów dwuczłonowego tagu, tzn. 
-	 * dla dwuczłonowego tagu &lt;a>&lt;/a> warunek ten spełnia &lt;/a> 
-	 * (przy czym metoda nie jest odpowiedzialna za potwierdzenie czy istnieje
-	 * tag dopełniający - tzn. otwierający).
-	 * @return
+	 * Testuje czy jest to tag zawierający zamknięcie (znak '/') na początku,
+	 * zaraz po znaku otwierającym '<'.
+	 * @return true jeśli jest to tag postaci: &lt;/a>, false w każdym innym wypadku.
 	 */
 	public boolean isClosing(){
 		return (closingSlashAt==startsAt+1)?true:false;
@@ -109,7 +106,7 @@ public class HalfElementRepresentation {
 		this.other = other;
 	}
 	/**
-	 * Testuje czy jest to tag opakowujący surowy tekst - tzn. nie zawierający
+	 * Testuje czy jest to tag opakowujący surowy tekst - tzn. nie zawierający < i > oraz nazwy tagu
 	 * @return
 	 */
 	public boolean isRaw() {
@@ -119,12 +116,18 @@ public class HalfElementRepresentation {
 		this.raw = raw;
 	}
 	/**
-	 * Testuje czy jest to tag nie zawierający istotnego znaku / 
-	 * - czyli w założeniach - pierwszy z obszarów dwuczłonowego tagu, tzn. 
-	 * dla dwuczłonowego tagu &lt;a>&lt;/a> warunek ten spełnia &lt;a>
-	 * (przy czym metoda nie jest odpowiedzialna za potwierdzenie czy istnieje
-	 * tag dopełniający - tzn. zamykający).
-	 * @return
+	 * Testuje czy jest to tag posiadający nazwę, ale nie zawierający znaku 
+	 * / <u>przed</u> nazwą tagu.
+	 * 
+	 * Metoda nie jest odpowiedzialna za potwierdzenie czy istnieje
+	 * tag dopełniający - tzn. zamykający.
+	 * @return true gdy tag jest:
+	 * <ul>
+	 * <li>albo pierwszym z obszarów dwuczłonowego tagu, tzn. 
+	 * dla dwuczłonowego tagu &lt;a>&lt;/a> warunek ten spełnia &lt;a>,</li>
+	 * <li>albo tagiem zawierającym / ale na końcu, np &lt;a/>.</li>
+	 * </ul>
+	 * w każdym innym przypadku false;
 	 */
 	public boolean isOpening(){
 		return !raw && !other && !isClosing();
@@ -179,6 +182,48 @@ public class HalfElementRepresentation {
 		interiors.add(interior);
 	}
 	
+	public String fromSavedChars(char[] chars, int startPos, int endPos){
+		int length = endPos-startPos+1;
+		return new String(chars, startPos, length);
+	}
+	
+	/**
+	 * Pobiera wycinek z chars i zwraca go jako {@link StringBuffer}.
+	 * @param chars
+	 * @param startPos
+	 * @param endPos
+	 * @return
+	 */
+	public StringBuffer fromSavedCharsAsStringBuffer(char[] chars, int startPos, int endPos){
+		int length = endPos-startPos+1;
+		StringBuffer sb = new StringBuffer();
+		return sb.append(chars, startPos, length);
+	}
+	
+	public String getNullSaveTagName(char[] chars) throws UnsupportedOperationException{
+		if(nameStartsAt > -1 && nameEndsAt >= nameStartsAt && chars != null && chars.length>nameEndsAt){
+			return fromSavedChars(chars, nameStartsAt, nameEndsAt);
+		} else {
+			throw new UnsupportedOperationException();
+		}
+	}
+	
+	public String getTagName(char[] chars) {
+		if(nameStartsAt > -1 && nameEndsAt >= nameStartsAt && chars != null && chars.length>nameEndsAt){
+			return fromSavedChars(chars, nameStartsAt, nameEndsAt);
+		} else {
+			return null;
+		}
+	}
+	
+	public StringBuffer getTagNameAsStringBuffer(char[] chars) {
+		if(nameStartsAt > -1 && nameEndsAt >= nameStartsAt && chars != null && chars.length>nameEndsAt){
+			return fromSavedCharsAsStringBuffer(chars, nameStartsAt, nameEndsAt);
+		} else {
+			return null;
+		}
+	}
+	
 	@Override
 	public String toString() {
 		StringBuffer attrSb = new StringBuffer();
@@ -228,5 +273,39 @@ public class HalfElementRepresentation {
 				+ intSb.toString() + "}]";
 	}
 	
-	
+	public StringBuffer stringifyUsingMarkupLanguage(char[] chars){
+		StringBuffer sb = null;
+		
+		if(isRaw() || isOther()){
+			sb = fromSavedCharsAsStringBuffer(chars, startsAt, endsAt);
+		} else {
+			// to jest normalny, nazwany tag
+			sb = new StringBuffer();
+			
+			sb.append('<');
+			if(isClosing()){
+				sb.append('/');
+			}
+			StringBuffer nameSb = getTagNameAsStringBuffer(chars);
+			if(nameSb!=null){
+				sb.append(nameSb);
+			}
+			
+			StringBuffer attrSb = new StringBuffer();
+			if(attributes!=null && !attributes.isEmpty()){
+				for(AttributeRepresentation attr: getAttributes()){
+					attrSb.append(" ");
+					attrSb.append(attr.stringifyAsStringBuffer(chars));
+				}
+			}
+			sb.append(attrSb);
+			
+			if(isSelfClosing()){
+				sb.append('/');
+			}
+			sb.append('>');
+		}
+		
+		return sb;
+	}
 }

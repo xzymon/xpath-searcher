@@ -26,9 +26,13 @@ import org.w3c.dom.NodeList;
 
 import com.xzymon.xpath_searcher.core.StateHolder;
 import com.xzymon.xpath_searcher.core.XMLStateHolder;
+import com.xzymon.xpath_searcher.core.XmlPreprocessingMode;
 import com.xzymon.xpath_searcher.core.converter.HTMLStreamConverter;
 import com.xzymon.xpath_searcher.core.converter.XMLStreamConverter;
+import com.xzymon.xpath_searcher.core.dom.DocumentTreeRepresentation;
+import com.xzymon.xpath_searcher.core.dom.HTMLDefaultOrphanedPolicies;
 import com.xzymon.xpath_searcher.core.dom.NodeRepresentation;
+import com.xzymon.xpath_searcher.core.dom.OrphanedPolicies;
 import com.xzymon.xpath_searcher.core.exception.ParserException;
 import com.xzymon.xpath_searcher.core.listener.LoggingBindingListener;
 import com.xzymon.xpath_searcher.core.listener.BindingListener;
@@ -129,6 +133,54 @@ public class XPathSearcherDisplay extends JTextPane implements StateHolder, Pars
 		return result;
 	}
 	
+	public boolean loadHTMLStreamWithJSoup(InputStream is, List<String> cssElementsToRemove) {
+		boolean result = false;
+		InputStream filteredIs = null;
+		InputStream preparedIs = null;
+		
+		if(cssElementsToRemove!=null && cssElementsToRemove.size()>0){
+			standardCssElementsToRemove.addAll(cssElementsToRemove);
+		}
+		/*
+		cssElementsToRemove.add("div.footer1");
+		cssElementsToRemove.add("div.footer2");
+		cssElementsToRemove.add("div.footer3");
+		cssElementsToRemove.add("div.footer4");
+		//cssElementsToRemove.add("div.center");
+		cssElementsToRemove.add("div.askCookies");
+		cssElementsToRemove.add("div.hidden");
+		*/
+		
+		try{
+			HTMLStreamConverter htmlConverter = new HTMLStreamConverter(is);
+			filteredIs = htmlConverter.getConvertedStream();
+			//preparedIs = prepareHtmlWithJsoup(filteredIs, standardCssElementsToRemove);
+			preparedIs = prepareHtmlWithJsoup(filteredIs, standardCssElementsToRemove);
+			result = loadStream(preparedIs);
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		} catch (ParserException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} finally {
+			if(filteredIs!=null){
+				try{
+					filteredIs.close();
+				} catch(IOException ex){
+					ex.printStackTrace();
+				}
+			}
+			if(preparedIs!=null){
+				try{
+					preparedIs.close();
+				} catch(IOException ex){
+					ex.printStackTrace();
+				}
+			}
+		}
+		return result;
+	}
+	
 	public boolean loadHTMLStream(InputStream is, List<String> cssElementsToRemove) {
 		boolean result = false;
 		InputStream filteredIs = null;
@@ -150,7 +202,8 @@ public class XPathSearcherDisplay extends JTextPane implements StateHolder, Pars
 		try{
 			HTMLStreamConverter htmlConverter = new HTMLStreamConverter(is);
 			filteredIs = htmlConverter.getConvertedStream();
-			preparedIs = prepareHtmlWithJsoup(filteredIs, standardCssElementsToRemove);
+			//preparedIs = prepareHtmlWithJsoup(filteredIs, standardCssElementsToRemove);
+			preparedIs = prepareHtml(filteredIs, standardCssElementsToRemove);
 			result = loadStream(preparedIs);
 		} catch (IOException e1) {
 			e1.printStackTrace();
@@ -179,6 +232,7 @@ public class XPathSearcherDisplay extends JTextPane implements StateHolder, Pars
 	private InputStream prepareHtmlWithJsoup(InputStream srcStream, List<String> elementTypesToRemove) throws IOException{
 		InputStream resultStream = null;
 		int avail = srcStream.available();
+		int removeCount;
 		if(avail>0){
 			byte[] bytes = new byte[avail];
 			srcStream.read(bytes);
@@ -186,14 +240,38 @@ public class XPathSearcherDisplay extends JTextPane implements StateHolder, Pars
 			logger.info(String.format("parsing by Jsoup..."));
 			org.jsoup.nodes.Document parsedDoc = Jsoup.parse(strSource);
 			for(String typeName : elementTypesToRemove){
+				logger.info("JSoup: removing css elements \"" + typeName + "\"");
 				Elements els = parsedDoc.select(typeName);
+				removeCount = 0;
 				for(Element el: els){
 					el.remove();
+					removeCount++;
 				}
+				logger.info("JSoup: " + removeCount +" of css elements \"" + typeName +"\" have been removed");
 			}
 			String fromHtml = parsedDoc.html();
 			String corrected = fromHtml.replaceAll("&nbsp;", "&#160;");
 			logger.info(String.format("html retrieved from Jsoup parsed document"));
+			resultStream = new ByteArrayInputStream(corrected.getBytes());
+		}
+		return resultStream;
+	}
+	
+	private InputStream prepareHtml(InputStream srcStream, List<String> elementTypesToRemove) throws IOException{
+		InputStream resultStream = null;
+		int avail = srcStream.available();
+		int removeCount;
+		if(avail>0){
+			byte[] savedStream = new byte[avail];
+			srcStream.read(savedStream);
+			logger.info(String.format("building Document Tree (DocumentTreeRepresentation) ..."));
+			OrphanedPolicies htmlDefaultPolicies = new HTMLDefaultOrphanedPolicies();
+			com.xzymon.xpath_searcher.core.dom.DocumentTreeRepresentation docTree = new DocumentTreeRepresentation(new ByteArrayInputStream(savedStream), XmlPreprocessingMode.ASSUME_HTML,
+					htmlDefaultPolicies);
+			logger.info("Document Tree built.");
+			String fromHtml = docTree.stringifyTree();
+			String corrected = fromHtml.replaceAll("&nbsp;", "&#160;");
+			logger.info(String.format("Document Tree stringified - HTML prepared."));
 			resultStream = new ByteArrayInputStream(corrected.getBytes());
 		}
 		return resultStream;
